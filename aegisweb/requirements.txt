@@ -1,0 +1,12 @@
+Django>=5.0
+djangorestframework>=3.14
+django-cors-headers>=4.3
+celery>=5.3
+redis>=5.0
+requests>=2.31
+httpx>=0.25
+cryptography>=41.0
+beautifulsoup4>=4.12
+lxml>=4.9
+python-dotenv>=1.0
+gunicorn>=21.0
