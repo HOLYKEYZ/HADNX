@@ -20,10 +20,9 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 # CORS - Restrict to specific origins in production
 CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') + [
-    'http://localhost:3000',
-    'http://localhost:5173',
     'http://localhost:5176',
-    'https://hadnx.onrender.com'
+    'https://hadnx.onrender.com',
+    'https://hadnx.vercel.app'
 ]
 
 # Database - PostgreSQL in production
