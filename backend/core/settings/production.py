@@ -25,6 +25,11 @@ CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') + [
     'https://hadnx.vercel.app'
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://hadnx.onrender.com',
+    'https://hadnx.vercel.app'
+]
+
 # Database - PostgreSQL in production
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
