@@ -9,6 +9,9 @@ import { CategoryScores } from "@/components/charts/CategoryScores";
 import { RiskBreakdown } from "@/components/charts/RiskBreakdown";
 import { RiskBadge } from "@/components/RiskBadge";
 import { FixPanel } from "@/components/FixPanel";
+import { ExportButtons } from "@/components/ExportButtons";
+import { ComplianceCards } from "@/components/ComplianceCards";
+import { RiskCorrelation } from "@/components/RiskCorrelation";
 import { api, type ScanDetail, type Finding } from "@/lib/api";
 import { formatDate, getCategoryLabel } from "@/lib/utils";
 import {
@@ -26,6 +29,7 @@ export default function ReportPage() {
   const scanId = params.id as string;
 
   const [scan, setScan] = useState<ScanDetail | null>(null);
+  const [complianceData, setComplianceData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -36,6 +40,16 @@ export default function ReportPage() {
       try {
         const data = await api.getScan(scanId);
         setScan(data);
+        
+        // Try to fetch compliance data (will fail if not SAAS or not authorized, which is fine)
+        try {
+            const comp = await api.getComplianceReport(scanId);
+            console.log("Compliance data loaded:", comp);
+            setComplianceData(comp);
+        } catch (e) {
+            console.error("Compliance data fetch failed:", e);
+        }
+        
       } catch (err) {
         setError("Failed to load scan report");
       } finally {
@@ -115,6 +129,8 @@ export default function ReportPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+           {/* Export Buttons */}
+          <ExportButtons scanId={scanId} />
           <ScoreGauge
             score={scan.overall_score || 0}
             grade={scan.grade || "F"}
@@ -123,30 +139,47 @@ export default function ReportPage() {
         </div>
       </div>
 
-      {/* Score Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Category Scores</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <CategoryScores
-              scores={{
-                headers: scan.headers_score,
-                cookies: scan.cookies_score,
-                tls: scan.tls_score,
-                https: scan.https_score,
-              }}
-            />
-          </CardContent>
-        </Card>
+       {/* Compliance Cards (Feature Gated) */}
+      <ComplianceCards 
+        scanId={scanId}
+        owaspScore={complianceData?.standards?.owasp?.compliance_score}
+        nistScore={complianceData?.standards?.nist?.compliance_score}
+        isoScore={complianceData?.standards?.iso27001?.compliance_score}
+      />
 
-        <Card>
+      {/* Score Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="space-y-6">
+            <Card className="h-full">
+            <CardHeader>
+                <CardTitle>Category Scores</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <CategoryScores
+                scores={{
+                    headers: scan.headers_score,
+                    cookies: scan.cookies_score,
+                    tls: scan.tls_score,
+                    https: scan.https_score,
+                }}
+                />
+            </CardContent>
+            </Card>
+            
+            {/* Risk Correlation (Feature Gated) */}
+            <RiskCorrelation 
+                riskScore={0}
+                riskLevel="LOW"
+                attackChains={[]}
+            />
+        </div>
+
+        <Card className="h-full min-h-[300px]">
           <CardHeader>
             <CardTitle>Severity Distribution</CardTitle>
           </CardHeader>
           <CardContent>
-            <RiskBreakdown distribution={scan.severity_distribution} />
+            <RiskBreakdown distribution={scan.severity_distribution || { critical: 0, high: 0, medium: 0, low: 0 }} />
           </CardContent>
         </Card>
       </div>
@@ -157,7 +190,7 @@ export default function ReportPage() {
           <CardTitle>Security Findings</CardTitle>
         </CardHeader>
         <CardContent>
-          {scan.findings.length === 0 ? (
+          {(scan.findings || []).length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Shield className="w-12 h-12 mx-auto mb-4 text-primary" />
               <p className="text-lg font-medium text-foreground">
@@ -169,14 +202,14 @@ export default function ReportPage() {
             <Tabs defaultValue="all" className="w-full">
               <TabsList className="mb-4">
                 <TabsTrigger value="all">
-                  All ({scan.findings.length})
+                  All ({(scan.findings || []).length})
                 </TabsTrigger>
-                {Object.entries(scan.findings_by_category).map(
+                {Object.entries(scan.findings_by_category || {}).map(
                   ([category, findings]) => (
                     <TabsTrigger key={category} value={category}>
                       <span className="flex items-center gap-2">
                         {categoryIcons[category]}
-                        {getCategoryLabel(category)} ({findings.length})
+                        {getCategoryLabel(category)} ({(findings as any[]).length})
                       </span>
                     </TabsTrigger>
                   )
@@ -184,13 +217,13 @@ export default function ReportPage() {
               </TabsList>
 
               <TabsContent value="all" className="space-y-4">
-                {scan.findings.map(renderFindingCard)}
+                {(scan.findings || []).map(renderFindingCard)}
               </TabsContent>
 
-              {Object.entries(scan.findings_by_category).map(
+              {Object.entries(scan.findings_by_category || {}).map(
                 ([category, findings]) => (
                   <TabsContent key={category} value={category} className="space-y-4">
-                    {findings.map(renderFindingCard)}
+                    {(findings as any[]).map(renderFindingCard)}
                   </TabsContent>
                 )
               )}

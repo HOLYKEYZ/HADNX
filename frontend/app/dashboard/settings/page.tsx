@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Moon, Bell, Info } from "lucide-react";
+import { api } from "@/lib/api";
 
 export default function SettingsPage() {
   return (
@@ -86,18 +87,32 @@ export default function SettingsPage() {
               About
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Version</span>
-              <span>1.0.0</span>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Version</span>
+                <span>1.0.0</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Backend</span>
+                <span>Django 5 + Celery</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Frontend</span>
+                <span>Next.js 14</span>
+              </div>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Backend</span>
-              <span>Django 5 + Celery</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Frontend</span>
-              <span>Next.js 14</span>
+            
+            <div className="pt-4 border-t border-border">
+              <button
+                onClick={() => {
+                  api.logout();
+                  window.location.href = "/";
+                }}
+                className="w-full h-10 rounded-lg bg-destructive/10 text-destructive font-medium hover:bg-destructive/20 transition-colors"
+              >
+                Sign Out
+              </button>
             </div>
           </CardContent>
         </Card>

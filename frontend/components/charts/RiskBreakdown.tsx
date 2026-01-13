@@ -12,11 +12,13 @@ interface RiskBreakdownProps {
 }
 
 export function RiskBreakdown({ distribution }: RiskBreakdownProps) {
+  const safeDistribution = distribution || { critical: 0, high: 0, medium: 0, low: 0 };
+  
   const data = [
-    { name: "Critical", value: distribution.critical, color: "#ef4444" },
-    { name: "High", value: distribution.high, color: "#f97316" },
-    { name: "Medium", value: distribution.medium, color: "#eab308" },
-    { name: "Low", value: distribution.low, color: "#3b82f6" },
+    { name: "Critical", value: safeDistribution.critical || 0, color: "#ef4444" },
+    { name: "High", value: safeDistribution.high || 0, color: "#f97316" },
+    { name: "Medium", value: safeDistribution.medium || 0, color: "#eab308" },
+    { name: "Low", value: safeDistribution.low || 0, color: "#3b82f6" },
   ];
 
   const CustomTooltip = ({ active, payload }: any) => {

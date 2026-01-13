@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, ArrowRight, Lock, Cookie, Server, Zap } from "lucide-react";
+import { UpgradeCard } from "@/components/UpgradeCard";
 
 import { api } from "@/lib/api";
 
@@ -36,8 +37,14 @@ export default function HomePage() {
       router.push(`/dashboard/scan/${data.id}`);
     } catch (err: any) {
       console.error("Scan error:", err);
-      const errorMessage = err.detail || err.error || "Failed to start scan. Please check if the backend is running.";
-      setError(errorMessage);
+      // Check for trial limit error
+      if (err.error === 'trial_limit_exceeded' || err.limit_reached) {
+        setError("You've reached the free trial limit (2 scans). Please sign up to continue.");
+        // Could also redirect or show a modal here
+      } else {
+        const errorMessage = err.detail || err.error || "Failed to start scan. Please check if the backend is running.";
+        setError(errorMessage);
+      }
       setIsLoading(false);
     }
   };
@@ -71,15 +78,14 @@ export default function HomePage() {
       <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-primary" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="Hadnx Logo"
+              className="w-10 h-10 rounded-lg"
+            />
             <span className="text-xl font-bold">Hadnx</span>
           </div>
           <nav className="flex items-center gap-6">
-            <a href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-              Dashboard
-            </a>
             <a href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               Sign In
             </a>
@@ -114,6 +120,11 @@ export default function HomePage() {
 
           {/* Scan Input */}
           <form onSubmit={handleScan} className="max-w-xl mx-auto">
+             <div className="flex justify-end mb-2">
+                <span className="text-xs font-medium text-primary px-2 py-1 bg-primary/10 rounded-full border border-primary/20">
+                    Free Trial: 2 scans per session
+                </span>
+             </div>
             <div className="relative flex items-center">
               <input
                 type="text"
@@ -163,6 +174,11 @@ export default function HomePage() {
               </p>
             </div>
           ))}
+        </div>
+
+        {/* Upgrade Promo Section */}
+        <div className="mt-20 w-full max-w-4xl mx-auto">
+          <UpgradeCard forceVisible={true} />
         </div>
       </main>
 

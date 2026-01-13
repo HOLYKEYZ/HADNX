@@ -3,7 +3,7 @@
  * Handles all communication with the Django REST API including Auth and CSRF.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:9001/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
 
 export interface Scan {
   id: string;
@@ -105,10 +105,21 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
   
   // Handle 401 Unauthorized (session expired)
   if (response.status === 401) {
-    if (typeof window !== 'undefined' && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
-      // Clear user and redirect
+    if (typeof window !== 'undefined' && 
+        !window.location.pathname.includes('/login') && 
+        !window.location.pathname.includes('/register')) {
+      
+      // Only force logout if we are sure it's an auth token issue, 
+      // or if we are not on a public page where 401 might be expected (unlikely for fetchWithAuth).
+      // But let's be careful. If a scan fails with 401, it means session is gone.
+      // So logout IS correct behavior for session-based auth.
+      // However, user claims "Try Again" logs them out. 
+      // This implies their session IS invalid.
+      // Why is it invalid? 
+      
       localStorage.removeItem("user");
-      // Optional: window.location.href = '/login';
+      // Redirect to login to make it obvious
+      window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
     }
   }
 
@@ -131,6 +142,15 @@ export const api = {
   
   getScanStatus: (id: string) => fetchWithAuth(`/scans/${id}/status/`).then(r => r.json()),
 
+  // Compliance & Advanced Features
+  getComplianceReport: (scanId: string) => fetchWithAuth(`/compliance/${scanId}/`).then(r => r.json()),
+  
+  getOWASPReport: (scanId: string) => fetchWithAuth(`/compliance/${scanId}/owasp/`).then(r => r.json()),
+  
+  getNISTReport: (scanId: string) => fetchWithAuth(`/compliance/${scanId}/nist/`).then(r => r.json()),
+  
+  getISOReport: (scanId: string) => fetchWithAuth(`/compliance/${scanId}/iso27001/`).then(r => r.json()),
+
   deleteScan: (id: string) => fetchWithAuth(`/scans/${id}/`, { method: "DELETE" }),
   
   // Auth
@@ -138,7 +158,15 @@ export const api = {
     method: "POST",
     body: JSON.stringify(data),
   }).then(async r => {
-    const json = await r.json();
+    let json;
+    try {
+      json = await r.json();
+    } catch (e) {
+      const text = await r.text().catch(() => "No body");
+      console.error(`Login failed: ${r.status} ${r.statusText}`, text.substring(0, 200));
+      throw new Error(`Server returned ${r.status} (${r.statusText}). Check console.`);
+    }
+    
     if (!r.ok) throw json;
     return json;
   }),

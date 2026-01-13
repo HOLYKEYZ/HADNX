@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  Shield,
   LayoutDashboard,
   History,
   Settings,
-  FileText,
   Plus,
 } from "lucide-react";
 
@@ -26,9 +25,13 @@ export function SidebarMenu() {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-primary" />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="Hadnx Logo"
+            width={40}
+            height={40}
+            className="rounded-lg"
+          />
           <span className="text-xl font-bold">Hadnx</span>
         </Link>
       </div>

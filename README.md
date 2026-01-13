@@ -33,7 +33,7 @@ A production-grade, defensive web security auditing platform that analyzes live 
 ### Backend Setup
 
 ```bash
-cd aegisweb
+cd backend
 
 # Create virtual environment
 python -m venv venv
@@ -83,7 +83,7 @@ Visit http://localhost:3000 to access the application.
 
 ```
 hadnx/
-├── aegisweb/                 # Django backend
+├── backend/                 # Django backend
 │   ├── core/                 # Settings, Celery, URLs
 │   ├── apps/
 │   │   ├── scanner/          # Scan logic

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Shield, User, Lock, Mail, Building } from "lucide-react";
 import { api } from "@/lib/api";
+import { useFeatureGate } from "@/lib/useFeatureGate";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { refetchUser } = useFeatureGate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +25,10 @@ export default function LoginPage() {
 
       // Store user in localStorage
       localStorage.setItem("user", JSON.stringify(data.user));
+      
+      // Refresh user in FeatureGate context
+      await refetchUser();
+      
       router.push("/dashboard");
     } catch (err: any) {
       console.error("Login error:", err);
