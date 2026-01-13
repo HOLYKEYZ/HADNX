@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'apps.users',
     'apps.scanner',
     'apps.reports',
-    'apps.reports',
     # 'apps.subscriptions',
 ]
 
