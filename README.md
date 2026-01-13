@@ -113,4 +113,4 @@ Hadnx is a **defensive** security tool:
 
 ## License
 
-MIT
+GNU GENERAL PUBLIC LICENSE Version 3
