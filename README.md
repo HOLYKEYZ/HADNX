@@ -68,7 +68,7 @@ npm install
 npm run dev
 ```
 
-Visit http://localhost:3000 to access the application.
+Visit http://localhost:5176 to access the application.
 
 ## API Endpoints
 

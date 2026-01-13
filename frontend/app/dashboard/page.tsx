@@ -273,135 +273,38 @@ export default function DashboardPage() {
   );
 }
 
-// Helper components to avoid hook conditional violations if we used hooks inside loops
+// Helper components logic simplified
+    
 function FeatureAwareTitle() {
-    const { available } = useFeature("scan_history");
-    return available ? "Recent Scans" : "Analysis Overview";
+    // Always show available title
+    return "Recent Scans";
 }
 
 function FeatureAwareLink() {
-    const { available } = useFeature("scan_history");
-    return available ? (
+    // Always available
+    return (
         <Link
             href="/dashboard/history"
             className="text-sm text-primary hover:underline"
         >
             View all →
         </Link>
-    ) : null;
+    );
 }
 
 function FeatureAwareContent({ scans }: { scans: Scan[] }) {
-    const { available } = useFeature("scan_history");
-    const { available: isPro } = useFeature("advanced_scanner"); // Proxy for pro/admin
-    
-    // We need CategoryScores component here, assuming it's imported.
-    // But wait, the DashboardPage doesn't have the scan DETAIL data needed for CategoryScores (headers_score, etc.).
-    // The 'scans' list usually has summary data.
-    // Let's check 'Scan' type in api.ts.
-    // If summary doesn't have category scores, we can't show them easily without fetching.
-    // We can show "Risk Distribution" again? No, that's redundant.
-    // The user said "show little part of the analysis".
-    // Maybe show the "Severity Distribution" (RiskBreakdown) if it's not already shown?
-    // It IS shown in the middle.
-    
-    // Let's look at the Dashboard again.
-    // Middle section: Latest Score (Left), Risk Breakdown (Right).
-    // User wants "Analysis" where History was.
-    // Maybe checking the image helps.
-    // "check my uploaded image... analysis layout is a bit disorganized".
-    // The image was of REPORT page.
-    
-    // BACKTRACK: User said "show free users no history at all... instead show little part of the analysis down where the history is currently".
-    // This is clearly about Dashboard page bottom section.
-    // If I can't show CategoryScores (no data), I'll show a "Latest Scan Summary" card?
-    // Or I'll fetch the latest scan detail?
-    // That adds complexity.
-    // Let's just HIDE history for free users and maybe show a "Upgrade for History" banner?
-    // "show little part of the analysis" -> Maybe show the breakdown there?
-    // I'll reuse RiskBreakdown for the BOTTOM section if free?
-    // But RiskBreakdown is already in the middle.
-    // I'll show the "CategoryScores" for the latest scan. I'll need to fetch detailed scan data?
-    // Actually, 'Scan' list item might have category scores? I'll check api.ts.
-
-    if (available) {
-        return scans.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {scans.slice(0, 4).map((scan) => (
-              <ScanCard key={scan.id} scan={scan} />
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="py-12 text-center text-muted-foreground">
-              <p>No scans yet. Start by scanning a URL!</p>
-            </CardContent>
-          </Card>
-        );
-    }
-
-    // For Free Users:
-    // Show CategoryScores for the latest scan if available
-    const latestScan = scans[0];
-
-    return (
-        <Card className="bg-muted/30 border-dashed">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-lg flex items-center gap-2">
-                    <Shield className="w-5 h-5 text-primary" />
-                    Latest Scan Analysis
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-                {latestScan && latestScan.status === "completed" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                        <div className="h-48">
-                            <CategoryScores 
-                                scores={{
-                                    headers: (latestScan as any).headers_score,
-                                    cookies: (latestScan as any).cookies_score,
-                                    tls: (latestScan as any).tls_score,
-                                    https: (latestScan as any).https_score,
-                                }}
-                            />
-                        </div>
-                        <div className="text-center md:text-left space-y-4">
-                            <div className="space-y-1">
-                                <h4 className="font-semibold text-xl">Detailed Insights</h4>
-                                <p className="text-sm text-muted-foreground">
-                                    Track deep security metrics across {latestScan.domain}. 
-                                    Upgrade to Pro for full historical data and compliance mapping.
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                                <Link href="/pricing">
-                                    <Button size="sm" className="gap-2">
-                                        <Sparkles className="w-4 h-4" />
-                                        View Full History
-                                    </Button>
-                                </Link>
-                                <Link href={`/dashboard/report/${latestScan.id}`}>
-                                    <Button variant="outline" size="sm">
-                                        View Latest Report
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="py-12 text-center space-y-4">
-                        <div className="flex justify-center">
-                            <Clock className="w-12 h-12 text-muted-foreground opacity-50" />
-                        </div>
-                        <div>
-                           <h3 className="text-lg font-medium">No Scan Data</h3>
-                           <p className="text-muted-foreground max-w-md mx-auto">
-                               Start your first scan to see the analysis preview here.
-                           </p>
-                        </div>
-                    </div>
-                )}
-            </CardContent>
-        </Card>
+    // Always show recent scans grid
+    return scans.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {scans.slice(0, 4).map((scan) => (
+          <ScanCard key={scan.id} scan={scan} />
+        ))}
+      </div>
+    ) : (
+      <Card>
+        <CardContent className="py-12 text-center text-muted-foreground">
+          <p>No scans yet. Start by scanning a URL!</p>
+        </CardContent>
+      </Card>
     );
 }
