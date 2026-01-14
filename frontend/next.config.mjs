@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Align with Django's APPEND_SLASH behavior
+  trailingSlash: true,
   // Enable standalone output for Docker deployments
   output: 'standalone',
   async rewrites() {
