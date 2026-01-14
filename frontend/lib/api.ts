@@ -4,6 +4,7 @@
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
+console.log("Current API_BASE_URL:", API_BASE_URL);
 
 export interface Scan {
   id: string;
