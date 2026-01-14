@@ -97,7 +97,7 @@ export default function DashboardPage() {
       {/* Debug Banner - Temporary */}
       {/* Debug Banner - Always Visible */}
       <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-2 text-xs font-mono rounded border border-yellow-200 dark:border-yellow-900/50">
-          DEBUG: User: {user ? user.username : 'NULL'} | 
+
           Staff: {user ? String(user.is_staff) : 'N/A'} | 
           Super: {user ? String(user.is_superuser) : 'N/A'} | 
           Export: {String(isFeatureAvailable('export_pdf'))}
