@@ -13,6 +13,9 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'dev-insecure-key-change-in-pro
 DEBUG = False
 ALLOWED_HOSTS = []
 
+# Disable automatic slash append - causes issues with frontend proxies
+APPEND_SLASH = False
+
 # =============================================================================
 # HADNX MODE CONFIGURATION
 # =============================================================================
