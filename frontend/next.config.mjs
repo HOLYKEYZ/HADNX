@@ -6,12 +6,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*/',
-        destination: 'https://hadnx.onrender.com/api/:path*/',
-      },
-      {
         source: '/api/:path*',
-        destination: 'https://hadnx.onrender.com/api/:path*/',
+        destination: 'https://hadnx.onrender.com/api/:path*',
       },
     ];
   },
