@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LockedFeature, PaidBadge } from "@/components/LockedFeature";
+// import { LockedFeature, PaidBadge } from "@/components/LockedFeature"; // Removed
 import { type Scan } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { 
@@ -45,7 +45,7 @@ export function ScanTimeline({ scans }: ScanTimelineProps) {
   }
 
   return (
-    <LockedFeature feature="scan_history" showUpgradePrompt>
+    <>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -64,7 +64,7 @@ export function ScanTimeline({ scans }: ScanTimelineProps) {
                   {trend === "up" ? "Improving" : trend === "down" ? "Declining" : "Stable"}
                 </div>
               )}
-              <PaidBadge />
+              {/* <PaidBadge /> */}
             </div>
           </CardTitle>
         </CardHeader>
@@ -130,6 +130,6 @@ export function ScanTimeline({ scans }: ScanTimelineProps) {
           </div>
         </CardContent>
       </Card>
-    </LockedFeature>
+    </>
   );
 }

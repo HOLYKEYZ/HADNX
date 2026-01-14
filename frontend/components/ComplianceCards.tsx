@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LockedFeature, PaidBadge } from "@/components/LockedFeature";
+// import { LockedFeature, PaidBadge } from "@/components/LockedFeature"; // Removed
 import { Shield, FileCheck, Building2 } from "lucide-react";
 import Link from "next/link";
 
@@ -41,7 +41,7 @@ export function ComplianceCards({ scanId, owaspScore, nistScore, isoScore }: Com
   ];
 
   return (
-    <LockedFeature feature="compliance" showUpgradePrompt>
+    <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {standards.map((standard) => (
           <Link key={standard.id} href={standard.href}>
@@ -52,7 +52,7 @@ export function ComplianceCards({ scanId, owaspScore, nistScore, isoScore }: Com
                     <standard.icon className={`w-4 h-4 ${standard.color}`} />
                     {standard.name}
                   </span>
-                  <PaidBadge feature="compliance" />
+                  {/* <PaidBadge feature="compliance" /> */}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -73,6 +73,6 @@ export function ComplianceCards({ scanId, owaspScore, nistScore, isoScore }: Com
           </Link>
         ))}
       </div>
-    </LockedFeature>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { LockedButton, PaidBadge } from "@/components/LockedFeature";
+// import { LockedButton, PaidBadge } from "@/components/LockedFeature"; // Removed
 import { Download, FileText, FileJson, Loader2 } from "lucide-react";
 import { useState } from "react";
 
@@ -42,8 +42,7 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
 
   return (
     <div className="flex items-center gap-2">
-      <LockedButton
-        feature="export_pdf"
+      <Button
         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
         onClick={() => handleExport("pdf")}
         disabled={exporting !== null}
@@ -54,10 +53,9 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
           <FileText className="w-4 h-4" />
         )}
         Export PDF
-      </LockedButton>
+      </Button>
       
-      <LockedButton
-        feature="export_json"
+      <Button
         className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
         onClick={() => handleExport("json")}
         disabled={exporting !== null}
@@ -68,7 +66,7 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
           <FileJson className="w-4 h-4" />
         )}
         Export JSON
-      </LockedButton>
+      </Button>
     </div>
   );
 }

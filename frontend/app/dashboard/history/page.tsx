@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ScanCard } from "@/components/ScanCard";
 import { ScanTimeline } from "@/components/ScanTimeline";
-import { LockedFeature } from "@/components/LockedFeature";
+// import { LockedFeature } from "@/components/LockedFeature"; // Removed
 import { api, type Scan } from "@/lib/api";
 import { Search, Filter } from "lucide-react";
 
@@ -102,7 +102,7 @@ export default function HistoryPage() {
       </div>
 
       {/* Scans List */}
-      <LockedFeature feature="scan_history" showUpgradePrompt={false}>
+      <>
           {filteredScans.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredScans.map((scan) => (
@@ -116,7 +116,7 @@ export default function HistoryPage() {
                 : "No scans match your filters."}
             </div>
           )}
-      </LockedFeature>
+      </>
     </div>
   );
 }

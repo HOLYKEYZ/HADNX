@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LockedFeature, PaidBadge } from "@/components/LockedFeature";
+// import { LockedFeature, PaidBadge } from "@/components/LockedFeature"; // Removed
 import { AlertTriangle, Link2, Shield, Zap } from "lucide-react";
 
 interface AttackChain {
@@ -28,7 +28,7 @@ export function RiskCorrelation({ riskScore, riskLevel, attackChains = [] }: Ris
   };
 
   return (
-    <LockedFeature feature="risk_correlation" showUpgradePrompt>
+    <>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
@@ -36,7 +36,7 @@ export function RiskCorrelation({ riskScore, riskLevel, attackChains = [] }: Ris
               <Zap className="w-5 h-5 text-primary" />
               Risk Correlation
             </span>
-            <PaidBadge feature="risk_correlation" />
+            {/* <PaidBadge feature="risk_correlation" /> */}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -88,6 +88,6 @@ export function RiskCorrelation({ riskScore, riskLevel, attackChains = [] }: Ris
           )}
         </CardContent>
       </Card>
-    </LockedFeature>
+    </>
   );
 }
