@@ -8,7 +8,8 @@ DEBUG = False
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['hadnx.onrender.com', 'localhost', '127.0.0.1']
 
 # SECURITY: Require HTTPS
-SECURE_SSL_REDIRECT = True
+# SECURITY: Require HTTPS (Handled by Render, so disabled here to prevent loops)
+SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
