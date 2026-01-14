@@ -11,6 +11,8 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['hadnx.onrende
 # SECURITY: Require HTTPS (Handled by Render, so disabled here to prevent loops)
 SECURE_SSL_REDIRECT = False
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+APPEND_SLASH = False
 
 # LOGGING for Debugging Render
 LOGGING = {
@@ -44,9 +46,11 @@ SESSION_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SAMESITE = 'None'
 SESSION_COOKIE_DOMAIN = None
 CSRF_COOKIE_DOMAIN = None
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+
+# HSTS - Disabled temporarily to debug redirects
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # CORS - Restrict to specific origins in production
@@ -66,7 +70,8 @@ CSRF_TRUSTED_ORIGINS = [
 # Database - PostgreSQL in production
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+    # conn_max_age=0 is safer for serverless environments (Neon/Render) to avoid stale connections
+    DATABASES['default'] = dj_database_url.config(conn_max_age=0)
 
 # Static files
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
