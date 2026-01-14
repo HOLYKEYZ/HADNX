@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Shield, ArrowRight, Lock, Cookie, Server, Zap } from "lucide-react";
-import { UpgradeCard } from "@/components/UpgradeCard";
+
 
 import { api } from "@/lib/api";
 
@@ -178,7 +178,7 @@ export default function HomePage() {
 
         {/* Upgrade Promo Section */}
         <div className="mt-20 w-full max-w-4xl mx-auto">
-          <UpgradeCard forceVisible={true} />
+
         </div>
       </main>
 

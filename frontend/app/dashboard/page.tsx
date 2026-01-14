@@ -9,7 +9,7 @@ import { RiskBreakdown } from "@/components/charts/RiskBreakdown";
 import { CategoryScores } from "@/components/charts/CategoryScores";
 import { ScanCard } from "@/components/ScanCard";
 import { api, type Scan } from "@/lib/api";
-import { UpgradeCard } from "@/components/UpgradeCard";
+
 import { Shield, AlertTriangle, CheckCircle, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useFeature, useFeatureGate } from "@/lib/useFeatureGate";
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       </div>
       
       {/* Upgrade Promo */}
-      <UpgradeCard />
+
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
