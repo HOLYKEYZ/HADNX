@@ -43,7 +43,8 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
   return (
     <div className="flex items-center gap-2">
       <Button
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
+        variant="outline"
+        className="gap-2 border-primary/50 hover:bg-primary/10 hover:text-primary transition-colors"
         onClick={() => handleExport("pdf")}
         disabled={exporting !== null}
       >
@@ -56,7 +57,8 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
       </Button>
       
       <Button
-        className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
+        variant="outline"
+        className="gap-2 border-primary/50 hover:bg-primary/10 hover:text-primary transition-colors"
         onClick={() => handleExport("json")}
         disabled={exporting !== null}
       >

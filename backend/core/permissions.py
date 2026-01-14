@@ -130,20 +130,9 @@ def is_paid_feature(feature_name: str) -> bool:
     """
     Check if a paid feature is available in current mode.
     
-    In OSS mode, all paid features return False.
-    In SAAS mode, returns True (subscription check happens elsewhere).
-    
-    Args:
-        feature_name: Name of the feature to check
-        
-    Returns:
-        True if feature is available, False otherwise
+    TEMPORARY: ALL FEATURES ENABLED FOR FREE
     """
-    if feature_name not in PAID_FEATURES:
-        # Unknown feature, allow by default (might be FREE)
-        return True
-    
-    return is_saas_mode()
+    return True
 
 
 def get_feature_info(feature_name: str) -> dict:
@@ -157,51 +146,12 @@ def get_feature_info(feature_name: str) -> dict:
 def require_paid_feature(feature_name: str):
     """
     Decorator to require a paid feature for a view.
-    
-    Usage:
-        @require_paid_feature('advanced_scanner')
-        def advanced_scan_view(request):
-            ...
+    TEMPORARY: bypassed
     """
     def decorator(view_func):
         @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
-            # 1. Staff/Superusers always bypass
-            if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
-                return view_func(request, *args, **kwargs)
-                
-            # 2. If feature is not available in this mode (Global Lock)
-            # In SAAS mode, is_paid_feature returns True for paid features
-            # In OSS mode, it returns False for paid features
-            available_in_mode = is_paid_feature(feature_name)
-            
-            if not available_in_mode and is_oss_mode():
-                 # Strictly unavailable in OSS
-                 feature_info = get_feature_info(feature_name)
-                 raise PermissionDenied({
-                    'error': 'feature_not_available',
-                    'feature': feature_name,
-                    'message': f"Feature not available in OSS mode: {feature_info.get('name')}"
-                })
-            
-            # 3. If SAAS mode, check user subscription
-            if is_saas_mode():
-                # We need to import here to avoid circular dependencies
-                from apps.subscriptions.services import SubscriptionService
-                
-                # Check subscription
-                sub = SubscriptionService.get_or_create_subscription(request.user)
-                if not sub.is_valid:
-                    feature_info = get_feature_info(feature_name)
-                    raise PermissionDenied({
-                        'error': 'paid_feature_required',
-                        'feature': feature_name,
-                        'feature_name': feature_info.get('name'),
-                        'feature_description': feature_info.get('description'),
-                        'message': f"This feature requires a paid subscription: {feature_info.get('name')}",
-                        'upgrade_url': '/pricing',
-                    })
-
+            # Always allow
             return view_func(request, *args, **kwargs)
         return wrapper
     return decorator
@@ -210,42 +160,12 @@ def require_paid_feature(feature_name: str):
 def require_paid_feature_api(feature_name: str):
     """
     Decorator for DRF APIView methods.
-    
-    Usage:
-        class AdvancedScanView(APIView):
-            @require_paid_feature_api('advanced_scanner')
-            def post(self, request):
-                ...
+    TEMPORARY: bypassed
     """
     def decorator(view_method):
         @functools.wraps(view_method)
         def wrapper(self, request, *args, **kwargs):
-            # 1. Staff/Superusers always bypass
-            if request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser):
-                return view_method(self, request, *args, **kwargs)
-
-            # 2. Mode check
-            available_in_mode = is_paid_feature(feature_name)
-            
-            if not available_in_mode and is_oss_mode():
-                 return Response({'error': 'Feature not available in OSS mode'}, status=status.HTTP_404_NOT_FOUND)
-
-            # 3. Subscription check in SAAS mode
-            if is_saas_mode():
-                from apps.subscriptions.services import SubscriptionService
-                sub = SubscriptionService.get_or_create_subscription(request.user)
-                
-                if not sub.is_valid:
-                    feature_info = get_feature_info(feature_name)
-                    return Response({
-                        'error': 'paid_feature_required',
-                        'feature': feature_name,
-                        'feature_name': feature_info.get('name'),
-                        'feature_description': feature_info.get('description'),
-                        'message': f"This feature requires a paid subscription: {feature_info.get('name')}",
-                        'upgrade_url': '/pricing',
-                    }, status=status.HTTP_402_PAYMENT_REQUIRED)
-            
+            # Always allow
             return view_method(self, request, *args, **kwargs)
         return wrapper
     return decorator
