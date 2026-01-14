@@ -15,13 +15,9 @@ const nextConfig = {
         },
       ];
     }
-    // Local development: proxy to local backend
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://127.0.0.1:9001/api/:path*',
-      },
-    ];
+    // Local development: DO NOT PROXY.
+    // Frontend should talk directly to http://127.0.0.1:9001/api via NEXT_PUBLIC_API_URL
+    return [];
   },
 };
 

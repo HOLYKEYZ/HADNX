@@ -60,7 +60,10 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
 
   const fetchConfig = async () => {
     try {
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
+      let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        API_URL = "http://127.0.0.1:9001/api";
+      }
       const response = await fetch(`${API_URL}/config/`);
       if (response.ok) {
         const data = await response.json();
@@ -76,8 +79,11 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
       try {
-          const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
-          const res = await fetch(`${API_URL}/auth/me/`, { credentials: "include" });
+      let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
+      if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+        API_URL = "http://127.0.0.1:9001/api";
+      }
+      const res = await fetch(`${API_URL}/auth/me/`, { credentials: "include" });
           if (res.ok) {
               const userData = await res.json();
               // Check if we got actual user data (has username) vs empty object
