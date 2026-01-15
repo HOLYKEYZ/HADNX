@@ -39,7 +39,7 @@ export default function HomePage() {
       console.error("Scan error:", err);
       // Check for trial limit error
       if (err.error === 'trial_limit_exceeded' || err.limit_reached) {
-        setError("You've reached the free trial limit (2 scans). Please sign up to continue.");
+        setError("You've reached the free trial limit (2 scans). Please sign up or sign in to continue.");
         // Could also redirect or show a modal here
       } else {
         const errorMessage = err.detail || err.error || "Failed to start scan. Please check if the backend is running.";
