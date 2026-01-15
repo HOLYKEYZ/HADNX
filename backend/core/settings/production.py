@@ -4,8 +4,8 @@ Production settings for Hadnx.
 import os
 from .base import *
 
-DEBUG = False
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['hadnx.onrender.com', 'localhost', '127.0.0.1']
+DEBUG = True
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') + ['hadnx.onrender.com', 'localhost', '127.0.0.1', '.vercel.app']
 
 # SECURITY: Require HTTPS
 # SECURITY: Require HTTPS (Handled by Render, so disabled here to prevent loops)
