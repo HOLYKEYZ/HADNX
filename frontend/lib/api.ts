@@ -7,7 +7,7 @@ let API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api
 
 // Force direct backend connection in local development to avoid Next.js proxy loops
 if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-  API_BASE_URL = "http://127.0.0.1:9001/api";
+  API_BASE_URL = "http://localhost:9001/api";
 }
 
 console.log("Current API_BASE_URL:", API_BASE_URL);

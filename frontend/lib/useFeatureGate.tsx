@@ -62,7 +62,7 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
     try {
       let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
       if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        API_URL = "http://127.0.0.1:9001/api";
+        API_URL = "http://localhost:9001/api";
       }
       const response = await fetch(`${API_URL}/config/`);
       if (response.ok) {
@@ -81,7 +81,7 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
       try {
       let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
       if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-        API_URL = "http://127.0.0.1:9001/api";
+        API_URL = "http://localhost:9001/api";
       }
       const res = await fetch(`${API_URL}/auth/me/`, { credentials: "include" });
           if (res.ok) {
