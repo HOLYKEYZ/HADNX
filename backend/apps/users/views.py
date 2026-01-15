@@ -43,15 +43,20 @@ def register_view(request):
 @permission_classes([AllowAny])
 def login_view(request):
     """Login user."""
-    serializer = LoginSerializer(data=request.data)
-    if serializer.is_valid():
-        user = serializer.validated_data['user']
-        login(request, user)
-        return Response({
-            'user': UserSerializer(user).data,
-            'message': 'Login successful'
-        })
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    try:
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.validated_data['user']
+            login(request, user)
+            return Response({
+                'user': UserSerializer(user).data,
+                'message': 'Login successful'
+            })
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc()) # Log to console for Render
+        return Response({'detail': f"Server Error: {str(e)}", 'trace': str(traceback.format_exc())}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
