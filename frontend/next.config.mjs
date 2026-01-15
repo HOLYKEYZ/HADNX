@@ -10,8 +10,12 @@ const nextConfig = {
     if (process.env.NODE_ENV === 'production') {
       return [
         {
+          source: '/api/:path*/', 
+          destination: 'https://hadnx.onrender.com/api/:path*/',
+        },
+        {
           source: '/api/:path*',
-          destination: 'https://hadnx.onrender.com/api/:path*',
+          destination: 'https://hadnx.onrender.com/api/:path*/',
         },
       ];
     }
