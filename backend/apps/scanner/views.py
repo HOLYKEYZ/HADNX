@@ -5,6 +5,8 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .models import Scan
 from .serializers import (
@@ -14,6 +16,7 @@ from .serializers import (
 from .tasks import run_security_scan
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class ScanViewSet(viewsets.ModelViewSet):
     """
     API endpoint for security scans.
