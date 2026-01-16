@@ -67,6 +67,8 @@ CSRF_TRUSTED_ORIGINS = [
     'https://hadnx.vercel.app'
 ]
 
+print(f"DEBUG: CSRF_TRUSTED_ORIGINS loaded: {CSRF_TRUSTED_ORIGINS}")
+
 # Database - PostgreSQL in production
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
