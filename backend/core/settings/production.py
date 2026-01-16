@@ -71,9 +71,15 @@ print(f"DEBUG: CSRF_TRUSTED_ORIGINS loaded: {CSRF_TRUSTED_ORIGINS}")
 
 # Database - PostgreSQL in production
 if os.environ.get('DATABASE_URL'):
-    import dj_database_url
-    # conn_max_age=0 is safer for serverless environments (Neon/Render) to avoid stale connections
-    DATABASES['default'] = dj_database_url.config(conn_max_age=0)
+    try:
+        import dj_database_url
+        # conn_max_age=0 is safer for serverless environments (Neon/Render) to avoid stale connections
+        DATABASES['default'] = dj_database_url.config(conn_max_age=0, ssl_require=True)
+        print("DEBUG: Database configured with DATABASE_URL")
+    except ImportError:
+        print("ERROR: dj_database_url not installed! Falling back to SQLite.")
+else:
+    print("WARNING: DATABASE_URL not set! Using default SQLite (Ephemeral).")
 
 # Static files
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
