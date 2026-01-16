@@ -54,6 +54,20 @@ def run_security_scan(self, scan_id: str):
         # Step 2: Run all analyzers
         all_findings = []
         
+        # Check for SSL Error from fetch_url (captured during retry)
+        if response_data.get('ssl_error'):
+            logger.info("Reporting SSL Error as finding...")
+            all_findings.append({
+                'issue': 'SSL Certificate Verification Failed',
+                'description': f"The server's SSL certificate could not be verified. Error: {response_data['ssl_error']}",
+                'severity': 'CRITICAL',
+                'category': 'tls',
+                'impact': 'Users may be intercepted by attackers. The connection is not trustworthy.',
+                'recommendation': 'Renew or fix the SSL certificate configuration immediately.',
+                'affected_element': 'SSL/TLS Certificate',
+                'score_impact': 100
+            })
+
         # Header analysis
         logger.info("Analyzing HTTP headers...")
         header_findings = analyze_headers(response_data.get('headers', {}))
@@ -136,7 +150,9 @@ def fetch_url(url: str) -> dict:
     timeout = getattr(settings, 'SCAN_TIMEOUT', 30)
     max_redirects = getattr(settings, 'SCAN_MAX_REDIRECTS', 5)
     
+    ssl_error = None
     try:
+        # First try: strict SSL verification
         response = requests.get(
             url,
             timeout=timeout,
@@ -146,55 +162,28 @@ def fetch_url(url: str) -> dict:
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                 'Accept-Language': 'en-US,en;q=0.5',
             },
-            verify=True,  # Verify SSL certificates
+            verify=True,
         )
-        
-        # Check redirect count
-        if len(response.history) > max_redirects:
-            return {'error': f'Too many redirects (>{max_redirects})'}
-        
-        # Collect headers (normalize to dict)
-        headers = dict(response.headers)
-        
-        # Collect Set-Cookie headers (multiple values possible)
-        set_cookies = []
-        for cookie in response.cookies:
-            # Reconstruct Set-Cookie header format
-            cookie_str = f"{cookie.name}={cookie.value}"
-            if cookie.secure:
-                cookie_str += "; Secure"
-            if 'httponly' in cookie._rest:
-                cookie_str += "; HttpOnly"
-            if cookie.path:
-                cookie_str += f"; Path={cookie.path}"
-            if cookie.domain:
-                cookie_str += f"; Domain={cookie.domain}"
-            if cookie.expires:
-                cookie_str += f"; Expires={cookie.expires}"
-            set_cookies.append(cookie_str)
-        
-        # Also check raw Set-Cookie headers
-        raw_cookies = response.headers.get('Set-Cookie', '')
-        if raw_cookies and not set_cookies:
-            set_cookies = [raw_cookies]
-        
-        # Get HTML content (limit size)
-        html = ''
-        content_type = response.headers.get('Content-Type', '')
-        if 'text/html' in content_type:
-            # Limit to 1MB to avoid memory issues
-            html = response.text[:1024 * 1024]
-        
-        return {
-            'headers': headers,
-            'set_cookies': set_cookies,
-            'html': html,
-            'status_code': response.status_code,
-            'final_url': response.url,
-        }
-        
     except requests.exceptions.SSLError as e:
-        return {'error': f'SSL Error: {str(e)}'}
+        # SSL failed, capture error and retry without verification to get analyzing data
+        ssl_error = str(e)
+        try:
+            import urllib3
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            response = requests.get(
+                url,
+                timeout=timeout,
+                allow_redirects=True,
+                headers={
+                    'User-Agent': 'Hadnx Security Scanner/1.0 (https://hadnx.dev)',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                },
+                verify=False,
+            )
+        except Exception as retry_exc:
+            return {'error': f'SSL Error and Retry Failed: {str(e)}'}
+
     except requests.exceptions.ConnectionError as e:
         return {'error': f'Connection Error: Could not connect to {url}'}
     except requests.exceptions.Timeout:
@@ -203,3 +192,48 @@ def fetch_url(url: str) -> dict:
         return {'error': 'Too many redirects'}
     except Exception as e:
         return {'error': f'Unexpected error: {str(e)}'}
+
+    # Check redirect count
+    if len(response.history) > max_redirects:
+        return {'error': f'Too many redirects (>{max_redirects})'}
+    
+    # Collect headers (normalize to dict)
+    headers = dict(response.headers)
+    
+    # Collect Set-Cookie headers (multiple values possible)
+    set_cookies = []
+    for cookie in response.cookies:
+        # Reconstruct Set-Cookie header format
+        cookie_str = f"{cookie.name}={cookie.value}"
+        if cookie.secure:
+            cookie_str += "; Secure"
+        if 'httponly' in cookie._rest:
+            cookie_str += "; HttpOnly"
+        if cookie.path:
+            cookie_str += f"; Path={cookie.path}"
+        if cookie.domain:
+            cookie_str += f"; Domain={cookie.domain}"
+        if cookie.expires:
+            cookie_str += f"; Expires={cookie.expires}"
+        set_cookies.append(cookie_str)
+    
+    # Also check raw Set-Cookie headers
+    raw_cookies = response.headers.get('Set-Cookie', '')
+    if raw_cookies and not set_cookies:
+        set_cookies = [raw_cookies]
+    
+    # Get HTML content (limit size)
+    html = ''
+    content_type = response.headers.get('Content-Type', '')
+    if 'text/html' in content_type:
+        # Limit to 1MB to avoid memory issues
+        html = response.text[:1024 * 1024]
+    
+    return {
+        'headers': headers,
+        'set_cookies': set_cookies,
+        'html': html,
+        'status_code': response.status_code,
+        'final_url': response.url,
+        'ssl_error': ssl_error, # Pass the captured SSL error up
+    }
