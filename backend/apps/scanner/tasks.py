@@ -16,6 +16,7 @@ from .services.mixed_content import analyze_https_posture
 from .services.scoring_engine import calculate_scores
 from .services.recon import run_recon_scan
 from .services.waf_detector import detect_waf
+from .services.directory_brute import run_directory_scan
 
 logger = logging.getLogger(__name__)
 
@@ -80,6 +81,11 @@ def run_security_scan(self, scan_id: str):
         logger.info("Detecting WAF...")
         waf_findings = detect_waf(response_data.get('headers', {}), response_data.get('set_cookies', []))
         all_findings.extend([f.to_dict() for f in waf_findings])
+
+        # Directory Bruteforce - Phase 2 Feature
+        logger.info("Running directory bruteforce...")
+        dir_findings = run_directory_scan(scan.url)
+        all_findings.extend(dir_findings)
 
         # Header analysis
         logger.info("Analyzing HTTP headers...")
