@@ -28,6 +28,11 @@ class FindingData:
     fix_examples: Dict[str, str] = field(default_factory=dict)
     affected_element: str = ''
     score_impact: int = 0
+    # Phase 2 fields
+    evidence: str = ''
+    poc: str = ''
+    confidence: str = 'HIGH'
+    description: str = ''
     
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

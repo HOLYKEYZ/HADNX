@@ -26,6 +26,7 @@ class FindingData:
     evidence: str = ''  # Raw evidence snippet
     description: str = ''  # Detailed description
     cwe_id: str = ''  # CWE reference if applicable
+    poc: str = ''  # Proof of Concept command
     
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)

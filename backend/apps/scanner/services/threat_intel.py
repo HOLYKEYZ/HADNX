@@ -20,7 +20,11 @@ class FindingData:
     fix_examples: Dict[str, str] = field(default_factory=dict)
     affected_element: str = ''
     score_impact: int = 0
+    # Phase 2 fields
     confidence: str = 'HIGH'
+    evidence: str = ''
+    poc: str = ''
+    description: str = ''
 
 class ThreatIntelScanner:
     """
