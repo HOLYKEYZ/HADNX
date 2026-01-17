@@ -14,6 +14,8 @@ from .services.cookie_analyzer import analyze_cookies, get_cookie_matrix
 from .services.tls_analyzer import analyze_tls
 from .services.mixed_content import analyze_https_posture
 from .services.scoring_engine import calculate_scores
+from .services.recon import run_recon_scan
+from .services.waf_detector import detect_waf
 
 logger = logging.getLogger(__name__)
 
@@ -67,6 +69,17 @@ def run_security_scan(self, scan_id: str):
                 'affected_element': 'SSL/TLS Certificate',
                 'score_impact': 100
             })
+
+        # Reconnaissance (Subdomains) - Phase 2 Feature
+        logger.info("Running reconnaissance...")
+        recon_findings = run_recon_scan(scan.domain)
+        # recon_findings are already dicts because run_recon_scan converts them
+        all_findings.extend(recon_findings)
+
+        # WAF Detection - Phase 2 Feature
+        logger.info("Detecting WAF...")
+        waf_findings = detect_waf(response_data.get('headers', {}), response_data.get('set_cookies', []))
+        all_findings.extend([f.to_dict() for f in waf_findings])
 
         # Header analysis
         logger.info("Analyzing HTTP headers...")
