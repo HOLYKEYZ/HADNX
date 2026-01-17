@@ -87,6 +87,24 @@ def run_security_scan(self, scan_id: str):
         dir_findings = run_directory_scan(scan.url)
         all_findings.extend(dir_findings)
 
+        # Cloud Recon - Phase 2 Feature
+        logger.info("Running cloud resource discovery...")
+        from .services.cloud_recon import run_cloud_scan
+        cloud_findings = run_cloud_scan(scan.url)
+        all_findings.extend(cloud_findings)
+
+        # Threat Intel - Phase 2 Feature
+        logger.info("Checking threat intelligence...")
+        from .services.threat_intel import run_threat_scan
+        threat_findings = run_threat_scan(scan.domain)
+        all_findings.extend(threat_findings)
+
+        # Malware/Phishing - Phase 2 Feature
+        logger.info("Scanning for malware/phishing indicators...")
+        from .services.malware_check import run_malware_scan
+        malware_findings = run_malware_scan(scan.url, response_data.get('html', ''))
+        all_findings.extend(malware_findings)
+
         # Header analysis
         logger.info("Analyzing HTTP headers...")
         header_findings = analyze_headers(response_data.get('headers', {}))
@@ -110,8 +128,28 @@ def run_security_scan(self, scan_id: str):
         html_content = response_data.get('html', '')
         https_findings = analyze_https_posture(scan.url, html_content)
         all_findings.extend([f.to_dict() for f in https_findings])
+
+        # Generate PoCs (Exploitation Sandbox) - Phase 2 Feature
+        from .services.poc_generator import attach_pocs
+        all_findings = attach_pocs(all_findings, scan.url)
+
+        # AI Pentest Analysis - Phase 2 Feature
+        from .services.ai_agent import run_ai_analysis
+        ai_report = run_ai_analysis(all_findings, scan.domain)
         
-        # Step 3: Calculate scores
+        # Append AI Report as a special finding
+        all_findings.insert(0, { # Put at top
+            'issue': "AI Pentest Assessment",
+            'severity': "INFO",
+            'category': "ai_analysis",
+            'impact': ai_report['risk_assessment'],
+            'description': ai_report['attack_narrative'],
+            'recommendation': ai_report['next_steps'],
+            'affected_element': "Entire Scope",
+            'score_impact': 0
+        })
+        
+        # Calculate scores
         logger.info("Calculating security scores...")
         scores = calculate_scores(all_findings)
         
