@@ -31,12 +31,15 @@ export interface Finding {
   issue: string;
   description: string;
   severity: "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" | "INFO";
-  category: "headers" | "cookies" | "tls" | "https" | "info_disclosure";
+  category: "headers" | "cookies" | "tls" | "https" | "info_disclosure" | "recon" | "waf" | "malware" | "threat_intel" | "ai_analysis";
   impact: string;
   recommendation: string;
   fix_examples: Record<string, string>;
   affected_element: string;
   score_impact: number;
+  poc?: string;      // New for Exploitation Sandbox
+  evidence?: string; // New for Subdomains/Recon
+  confidence?: string; // New for WAF/Malware
 }
 
 export interface ScanDetail extends Scan {

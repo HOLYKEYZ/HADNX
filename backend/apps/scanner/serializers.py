@@ -13,7 +13,7 @@ class FindingSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'issue', 'description', 'severity', 'category',
             'impact', 'recommendation', 'fix_examples', 'affected_element',
-            'score_impact', 'created_at'
+            'score_impact', 'created_at', 'poc', 'evidence', 'confidence'
         ]
         read_only_fields = ['id', 'created_at']
 

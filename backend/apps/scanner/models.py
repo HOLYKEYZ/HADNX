@@ -78,6 +78,12 @@ class Finding(models.Model):
         TLS = 'tls', 'TLS/SSL'
         HTTPS = 'https', 'HTTPS Enforcement'
         INFO_DISCLOSURE = 'info_disclosure', 'Information Disclosure'
+        # Phase 2 Categories
+        RECON = 'recon', 'Reconnaissance'
+        WAF = 'waf', 'WAF Detection'
+        MALWARE = 'malware', 'Malware & Phishing'
+        THREAT_INTEL = 'threat_intel', 'Threat Intelligence'
+        AI_ANALYSIS = 'ai_analysis', 'AI Analysis'
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     scan = models.ForeignKey(Scan, on_delete=models.CASCADE, related_name='findings')
@@ -96,7 +102,12 @@ class Finding(models.Model):
     fix_examples = models.JSONField(default=dict)
     
     # Optional: affected element (e.g., cookie name, header name)
-    affected_element = models.CharField(max_length=255, blank=True)
+    affected_element = models.TextField(blank=True) # Changed to TextField to support long recon lists
+    
+    # Phase 2 Fields
+    poc = models.TextField(blank=True, help_text="Proof of Concept command or script")
+    evidence = models.TextField(blank=True, help_text="Raw evidence data (e.g. log output)")
+    confidence = models.CharField(max_length=20, default='HIGH', blank=True)
     
     # Scoring weight for this finding
     score_impact = models.IntegerField(default=0)

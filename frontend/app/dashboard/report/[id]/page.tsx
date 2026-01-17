@@ -22,59 +22,17 @@ import {
   Cookie,
   Lock,
   Server,
+  Search, // Recon
+  ShieldCheck, // WAF
+  Skull, // Malware
+  Activity, // Threat Intel
+  BrainCircuit, // AI
+  Terminal, // PoC
+  Copy,
+  Check,
 } from "lucide-react";
 
-export default function ReportPage() {
-  const params = useParams();
-  const scanId = params.id as string;
-
-  const [scan, setScan] = useState<ScanDetail | null>(null);
-  const [complianceData, setComplianceData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!scanId) return;
-
-    const loadScan = async () => {
-      try {
-        const data = await api.getScan(scanId);
-        setScan(data);
-        
-        // Try to fetch compliance data (will fail if not SAAS or not authorized, which is fine)
-        try {
-            const comp = await api.getComplianceReport(scanId);
-            console.log("Compliance data loaded:", comp);
-            setComplianceData(comp);
-        } catch (e) {
-            console.error("Compliance data fetch failed:", e);
-        }
-        
-      } catch (err) {
-        setError("Failed to load scan report");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadScan();
-  }, [scanId]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (error || !scan) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-severity-critical">{error || "Scan not found"}</p>
-      </div>
-    );
-  }
+// ... existing code ...
 
   const categoryIcons: Record<string, React.ReactNode> = {
     headers: <Server className="w-5 h-5" />,
@@ -82,34 +40,100 @@ export default function ReportPage() {
     tls: <Lock className="w-5 h-5" />,
     https: <Shield className="w-5 h-5" />,
     info_disclosure: <AlertTriangle className="w-5 h-5" />,
+    recon: <Search className="w-5 h-5" />,
+    waf: <ShieldCheck className="w-5 h-5" />,
+    malware: <Skull className="w-5 h-5" />,
+    threat_intel: <Activity className="w-5 h-5" />,
+    ai_analysis: <BrainCircuit className="w-5 h-5" />,
   };
 
-  const renderFindingCard = (finding: Finding) => (
+  const CopyButton = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+    return (
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(text);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+        className="absolute top-2 right-2 p-1 rounded hover:bg-muted/50 text-muted-foreground transition-colors"
+      >
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+      </button>
+    );
+  };
+
+  const renderFindingCard = (finding: Finding) => {
+    // Special handling for AI Report (rendered differently)
+    if (finding.category === 'ai_analysis') return null;
+
+    return (
     <div
       key={finding.id}
       className="p-4 rounded-lg border border-border bg-card/50"
     >
       <div className="flex items-start justify-between gap-4 mb-3">
-        <h4 className="font-medium">{finding.issue}</h4>
+        <h4 className="font-medium flex items-center gap-2">
+            {finding.category === 'waf' && <ShieldCheck className="w-4 h-4 text-green-500" />}
+            {finding.category === 'malware' && <Skull className="w-4 h-4 text-red-500" />}
+            {finding.issue}
+        </h4>
         <RiskBadge severity={finding.severity} />
       </div>
-      <p className="text-sm text-muted-foreground mb-3">{finding.impact}</p>
+      
+      {finding.description && (
+          <p className="text-sm text-muted-foreground mb-3">{finding.description}</p>
+      )}
+      
+      <p className="text-sm text-foreground/80 mb-3">{finding.impact}</p>
+      
+      {/* Evidence Block (Recon/Subdomains) */}
+      {finding.evidence && (
+        <div className="mb-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Evidence</p>
+            <div className="relative rounded-md bg-muted/30 border border-border p-3">
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto font-mono text-muted-foreground">
+                    {finding.evidence}
+                </pre>
+            </div>
+        </div>
+      )}
+
+      {/* PoC Block (Exploitation Sandbox) */}
+      {finding.poc && (
+        <div className="mb-4">
+            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider flex items-center gap-1">
+                <Terminal className="w-3 h-3" /> Proof of Concept
+            </p>
+            <div className="relative rounded-md bg-black/90 border border-border p-3 group">
+                <pre className="text-xs overflow-x-auto font-mono text-green-400">
+                    {finding.poc}
+                </pre>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <CopyButton text={finding.poc} />
+                </div>
+            </div>
+        </div>
+      )}
+
       <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mb-2">
         <p className="text-sm">
           <span className="font-medium text-primary">Recommendation: </span>
           {finding.recommendation}
         </p>
       </div>
+      
       {finding.affected_element && (
-        <p className="text-xs text-muted-foreground font-mono mb-2">
+        <p className="text-xs text-muted-foreground font-mono mb-2 truncate" title={finding.affected_element}>
           Affected: {finding.affected_element}
         </p>
       )}
+      
       {Object.keys(finding.fix_examples).length > 0 && (
         <FixPanel fixExamples={finding.fix_examples} />
       )}
     </div>
-  );
+  )};
 
   return (
     <div className="space-y-8">
@@ -183,6 +207,61 @@ export default function ReportPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Pentest Report (Phase 2 Feature) */}
+      {scan.findings?.find(f => f.category === 'ai_analysis') && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <div className="p-2 bg-primary/10 rounded-full">
+                <BrainCircuit className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+                <CardTitle className="text-xl">AI Agent Assessment</CardTitle>
+                <p className="text-sm text-muted-foreground">Automated Attack Path Analysis</p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+             {(() => {
+                 const aiFinding = scan.findings?.find(f => f.category === 'ai_analysis');
+                 if (!aiFinding) return null;
+                 return (
+                     <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="p-4 rounded-lg bg-background/50 border border-border">
+                                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                    <ShieldCheck className="w-4 h-4 text-primary" /> Risk Assessment
+                                </h4>
+                                <p className="text-lg font-bold text-primary">{aiFinding.impact}</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-background/50 border border-border">
+                                <h4 className="font-semibold mb-2 flex items-center gap-2">
+                                    <Activity className="w-4 h-4 text-primary" /> Strategic Impact
+                                </h4>
+                                <p className="text-sm text-muted-foreground">
+                                    Based on {scan.findings.length} findings, the AI agent has determined a {aiFinding.impact} risk profile for this asset.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h4 className="font-semibold mb-2">Attack Narrative</h4>
+                            <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+                                {aiFinding.description}
+                            </p>
+                        </div>
+
+                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                            <h4 className="font-semibold mb-1 text-green-500">Recommended Next Steps</h4>
+                            <pre className="text-sm whitespace-pre-wrap font-sans text-foreground/80">
+                                {aiFinding.recommendation}
+                            </pre>
+                        </div>
+                     </>
+                 );
+             })()}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Findings by Category */}
       <Card>
