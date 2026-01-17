@@ -9,6 +9,7 @@ from django.conf import settings
 import requests
 
 from .models import Scan, Finding
+from .services.core import fetch_url
 from .services.header_analyzer import analyze_headers
 from .services.cookie_analyzer import analyze_cookies, get_cookie_matrix
 from .services.tls_analyzer import analyze_tls

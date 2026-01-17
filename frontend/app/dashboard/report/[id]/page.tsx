@@ -32,7 +32,56 @@ import {
   Check,
 } from "lucide-react";
 
-// ... existing code ...
+export default function ReportPage() {
+  const params = useParams();
+  const scanId = params.id as string;
+
+  const [scan, setScan] = useState<ScanDetail | null>(null);
+  const [complianceData, setComplianceData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!scanId) return;
+
+    const loadScan = async () => {
+      try {
+        const data = await api.getScan(scanId);
+        setScan(data);
+        
+        // Try to fetch compliance data
+        try {
+            const comp = await api.getComplianceReport(scanId);
+            setComplianceData(comp);
+        } catch (e) {
+            console.error("Compliance data fetch failed:", e);
+        }
+        
+      } catch (err) {
+        setError("Failed to load scan report");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadScan();
+  }, [scanId]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !scan) {
+    return (
+      <div className="text-center py-12">
+        <p className="text-severity-critical">{error || "Scan not found"}</p>
+      </div>
+    );
+  }
 
   const categoryIcons: Record<string, React.ReactNode> = {
     headers: <Server className="w-5 h-5" />,
@@ -68,72 +117,73 @@ import {
     if (finding.category === 'ai_analysis') return null;
 
     return (
-    <div
-      key={finding.id}
-      className="p-4 rounded-lg border border-border bg-card/50"
-    >
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <h4 className="font-medium flex items-center gap-2">
-            {finding.category === 'waf' && <ShieldCheck className="w-4 h-4 text-green-500" />}
-            {finding.category === 'malware' && <Skull className="w-4 h-4 text-red-500" />}
-            {finding.issue}
-        </h4>
-        <RiskBadge severity={finding.severity} />
-      </div>
-      
-      {finding.description && (
-          <p className="text-sm text-muted-foreground mb-3">{finding.description}</p>
-      )}
-      
-      <p className="text-sm text-foreground/80 mb-3">{finding.impact}</p>
-      
-      {/* Evidence Block (Recon/Subdomains) */}
-      {finding.evidence && (
-        <div className="mb-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Evidence</p>
-            <div className="relative rounded-md bg-muted/30 border border-border p-3">
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto font-mono text-muted-foreground">
-                    {finding.evidence}
-                </pre>
-            </div>
+      <div
+        key={finding.id}
+        className="p-4 rounded-lg border border-border bg-card/50"
+      >
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <h4 className="font-medium flex items-center gap-2">
+              {finding.category === 'waf' && <ShieldCheck className="w-4 h-4 text-green-500" />}
+              {finding.category === 'malware' && <Skull className="w-4 h-4 text-red-500" />}
+              {finding.issue}
+          </h4>
+          <RiskBadge severity={finding.severity} />
         </div>
-      )}
+        
+        {finding.description && (
+            <p className="text-sm text-muted-foreground mb-3">{finding.description}</p>
+        )}
+        
+        <p className="text-sm text-foreground/80 mb-3">{finding.impact}</p>
+        
+        {/* Evidence Block (Recon/Subdomains) */}
+        {finding.evidence && (
+          <div className="mb-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider">Evidence</p>
+              <div className="relative rounded-md bg-muted/30 border border-border p-3">
+                  <pre className="text-xs overflow-x-auto whitespace-pre-wrap max-h-40 overflow-y-auto font-mono text-muted-foreground">
+                      {finding.evidence}
+                  </pre>
+              </div>
+          </div>
+        )}
 
-      {/* PoC Block (Exploitation Sandbox) */}
-      {finding.poc && (
-        <div className="mb-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider flex items-center gap-1">
-                <Terminal className="w-3 h-3" /> Proof of Concept
-            </p>
-            <div className="relative rounded-md bg-black/90 border border-border p-3 group">
-                <pre className="text-xs overflow-x-auto font-mono text-green-400">
-                    {finding.poc}
-                </pre>
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <CopyButton text={finding.poc} />
-                </div>
-            </div>
+        {/* PoC Block (Exploitation Sandbox) */}
+        {finding.poc && (
+          <div className="mb-4">
+              <p className="text-xs font-semibold text-muted-foreground mb-1 uppercase tracking-wider flex items-center gap-1">
+                  <Terminal className="w-3 h-3" /> Proof of Concept
+              </p>
+              <div className="relative rounded-md bg-black/90 border border-border p-3 group">
+                  <pre className="text-xs overflow-x-auto font-mono text-green-400">
+                      {finding.poc}
+                  </pre>
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <CopyButton text={finding.poc} />
+                  </div>
+              </div>
+          </div>
+        )}
+
+        <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mb-2">
+          <p className="text-sm">
+            <span className="font-medium text-primary">Recommendation: </span>
+            {finding.recommendation}
+          </p>
         </div>
-      )}
-
-      <div className="p-3 rounded-lg bg-primary/5 border border-primary/20 mb-2">
-        <p className="text-sm">
-          <span className="font-medium text-primary">Recommendation: </span>
-          {finding.recommendation}
-        </p>
+        
+        {finding.affected_element && (
+          <p className="text-xs text-muted-foreground font-mono mb-2 truncate" title={finding.affected_element}>
+            Affected: {finding.affected_element}
+          </p>
+        )}
+        
+        {Object.keys(finding.fix_examples).length > 0 && (
+          <FixPanel fixExamples={finding.fix_examples} />
+        )}
       </div>
-      
-      {finding.affected_element && (
-        <p className="text-xs text-muted-foreground font-mono mb-2 truncate" title={finding.affected_element}>
-          Affected: {finding.affected_element}
-        </p>
-      )}
-      
-      {Object.keys(finding.fix_examples).length > 0 && (
-        <FixPanel fixExamples={finding.fix_examples} />
-      )}
-    </div>
-  )};
+    );
+  };
 
   return (
     <div className="space-y-8">
