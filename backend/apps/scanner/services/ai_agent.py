@@ -32,6 +32,17 @@ class AIPentestAgent:
     def __init__(self):
         self.groq_key = os.environ.get('GROQ_KEY')
         self.gemini_key = os.environ.get('GEMINI_KEY')
+        
+        # Debug logging
+        if self.groq_key:
+            logger.info(f"AI Agent: Groq Key loaded (starts with {self.groq_key[:4]}...)")
+        else:
+            logger.warning("AI Agent: Groq Key NOT found in environment")
+            
+        if self.gemini_key:
+            logger.info(f"AI Agent: Gemini Key loaded (starts with {self.gemini_key[:4]}...)")
+        else:
+            logger.warning("AI Agent: Gemini Key NOT found in environment")
 
     def analyze(self, findings: List[Dict[str, Any]], domain: str) -> Dict[str, str]:
         """
@@ -42,25 +53,34 @@ class AIPentestAgent:
         highs = [f for f in findings if f.get('severity') == 'HIGH']
         mediums = [f for f in findings if f.get('severity') == 'MEDIUM']
         
+        # Log findings count
+        logger.info(f"AI Agent: Analyzing {len(findings)} findings ({len(criticals)} crit, {len(highs)} high) for {domain}")
+        
         findings_summary = self._create_findings_summary(findings)
         prompt = SECURITY_ANALYSIS_PROMPT.format(domain=domain, findings_summary=findings_summary)
         
         # Try Groq first
         if self.groq_key:
-            logger.info("Attempting AI analysis with Groq...")
+            logger.info("AI Agent: Attempting analysis with Groq...")
             result = self._call_groq(prompt)
             if result:
+                logger.info("AI Agent: Groq analysis successful")
                 return result
+            else:
+                logger.error("AI Agent: Groq analysis failed, trying fallback...")
         
         # Fallback to Gemini
         if self.gemini_key:
-            logger.info("Falling back to Gemini for AI analysis...")
+            logger.info("AI Agent: Attempting analysis with Gemini...")
             result = self._call_gemini(prompt)
             if result:
+                logger.info("AI Agent: Gemini analysis successful")
                 return result
+            else:
+                logger.error("AI Agent: Gemini analysis failed")
         
         # Final fallback: Simulation
-        logger.info("Using simulation mode for AI analysis (no API keys configured)")
+        logger.warning("AI Agent: Falling back to SIMULATION mode (keys missing or API calls failed)")
         return self._simulate_analysis(len(criticals), len(highs), domain)
 
     def _create_findings_summary(self, findings: List[Dict[str, Any]]) -> str:
@@ -77,7 +97,9 @@ class AIPentestAgent:
     def _call_groq(self, prompt: str) -> Dict[str, str] | None:
         """Call Groq API (uses OpenAI-compatible endpoint)."""
         try:
-            response = requests.post(
+            # Create session for better connection handling
+            session = requests.Session()
+            response = session.post(
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={
                     "Authorization": f"Bearer {self.groq_key}",
@@ -86,11 +108,12 @@ class AIPentestAgent:
                 json={
                     "model": "llama-3.3-70b-versatile",
                     "messages": [
-                        {"role": "system", "content": "You are an expert penetration tester. Respond only in valid JSON."},
+                        {"role": "system", "content": "You are an expert penetration tester. Respond in valid JSON only. Do not use markdown code blocks."},
                         {"role": "user", "content": prompt}
                     ],
                     "temperature": 0.3,
-                    "max_tokens": 500
+                    "max_tokens": 1024,
+                    "response_format": {"type": "json_object"}
                 },
                 timeout=30
             )
@@ -114,10 +137,10 @@ class AIPentestAgent:
                 f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={self.gemini_key}",
                 headers={"Content-Type": "application/json"},
                 json={
-                    "contents": [{"parts": [{"text": prompt}]}],
+                    "contents": [{"parts": [{"text": "Respond in valid JSON only. " + prompt}]}],
                     "generationConfig": {
                         "temperature": 0.3,
-                        "maxOutputTokens": 500
+                        "maxOutputTokens": 1024
                     }
                 },
                 timeout=30
@@ -142,19 +165,25 @@ class AIPentestAgent:
             content = content.strip()
             if content.startswith("```json"):
                 content = content[7:]
-            if content.startswith("```"):
+            elif content.startswith("```"):
                 content = content[3:]
+            
             if content.endswith("```"):
                 content = content[:-3]
             
-            parsed = json.loads(content.strip())
+            content = content.strip()
+            
+            # Simple fix for unescaped newlines in strings if json.loads fails (basic attempt)
+            # Not fully robust but helps with common LLM mistakes
+            
+            parsed = json.loads(content)
             return {
                 "attack_narrative": parsed.get("attack_narrative", "Analysis not available."),
                 "risk_assessment": parsed.get("risk_assessment", "Unknown"),
                 "next_steps": parsed.get("next_steps", "Review findings manually.")
             }
         except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse LLM response: {e}\nContent: {content[:200]}")
+            logger.error(f"Failed to parse LLM response: {e}\nContent: {content[:200]}...")
             return None
 
     def _simulate_analysis(self, crit_count: int, high_count: int, domain: str) -> Dict[str, str]:
