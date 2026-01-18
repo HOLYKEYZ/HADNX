@@ -1,122 +1,148 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ScanCard } from "@/components/ScanCard";
-import { ScanTimeline } from "@/components/ScanTimeline";
-// import { LockedFeature } from "@/components/LockedFeature"; // Removed
+import Link from "next/link";
 import { api, type Scan } from "@/lib/api";
-import { Search, Filter } from "lucide-react";
+import { HistoryChart } from "@/components/charts/HistoryChart";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { formatDate } from "@/lib/utils";
+import { ArrowRight, Loader2, ShieldAlert } from "lucide-react";
 
 export default function HistoryPage() {
   const [scans, setScans] = useState<Scan[]>([]);
-  const [filteredScans, setFilteredScans] = useState<Scan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   useEffect(() => {
+    const loadScans = async () => {
+      try {
+        const data = await api.getScans();
+        setScans(data);
+      } catch (error) {
+        console.error("Failed to load scans", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadScans();
   }, []);
 
-  useEffect(() => {
-    filterScans();
-  }, [scans, searchTerm, statusFilter]);
-
-  const loadScans = async () => {
-    try {
-      const data = await api.getScans();
-      setScans(data.results || []);
-    } catch (err) {
-      console.error("Failed to load scans:", err);
-    } finally {
-      setIsLoading(false);
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "default"; // Black/Primary
+      case "failed":
+        return "destructive";
+      case "running":
+        return "secondary";
+      default:
+        return "outline";
     }
   };
 
-  const filterScans = () => {
-    let filtered = scans;
-
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (s) =>
-          s.domain.toLowerCase().includes(term) ||
-          s.url.toLowerCase().includes(term)
-      );
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((s) => s.status === statusFilter);
-    }
-
-    setFilteredScans(filtered);
+  const getGradeColor = (grade: string) => {
+    if (!grade) return "bg-gray-100 text-gray-800";
+    if (grade.startsWith("A")) return "bg-green-100 text-green-800 border-green-200";
+    if (grade.startsWith("B")) return "bg-blue-100 text-blue-800 border-blue-200";
+    if (grade.startsWith("C")) return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    return "bg-red-100 text-red-800 border-red-200";
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Scan History</h1>
-        <p className="text-muted-foreground mt-1">
-          View all your previous security scans
-        </p>
+        <h1 className="text-3xl font-bold tracking-tight">Scan History</h1>
+        <p className="text-muted-foreground">Track your security posture over time.</p>
       </div>
 
-      {/* Timeline (Feature Gated) */}
-      <ScanTimeline scans={scans} />
+      <div className="grid gap-6">
+        <HistoryChart scans={scans} />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search by domain or URL..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 rounded-lg bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-muted-foreground" />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="h-10 px-3 rounded-lg bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
-          >
-            <option value="all">All Status</option>
-            <option value="completed">Completed</option>
-            <option value="running">Running</option>
-            <option value="failed">Failed</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>Recent Scans</CardTitle>
+                <CardDescription>
+                    A list of all security assessments performed.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                {scans.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                        <ShieldAlert className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                        <p>No scans found. Start a new scan to see history.</p>
+                        <Button asChild className="mt-4" variant="outline">
+                            <Link href="/dashboard">Start Scan</Link>
+                        </Button>
+                    </div>
+                ) : (
+                    <Table>
+                    <TableHeader>
+                        <TableRow>
+                        <TableHead>Target</TableHead>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Grade</TableHead>
+                        <TableHead>Score</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {scans.map((scan) => (
+                        <TableRow key={scan.id}>
+                            <TableCell className="font-medium">{scan.domain}</TableCell>
+                            <TableCell>{formatDate(scan.created_at)}</TableCell>
+                            <TableCell>
+                            <Badge variant={getStatusColor(scan.status) as any}>
+                                {scan.status}
+                            </Badge>
+                            </TableCell>
+                            <TableCell>
+                                {scan.grade && (
+                                    <span className={`px-2 py-1 rounded text-xs font-bold border ${getGradeColor(scan.grade)}`}>
+                                        {scan.grade}
+                                    </span>
+                                )}
+                            </TableCell>
+                            <TableCell>
+                                {scan.overall_score !== null ? (
+                                    <span className="font-mono font-medium">{scan.overall_score}/100</span>
+                                ) : (
+                                    <span className="text-muted-foreground">-</span>
+                                )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                            <Button variant="ghost" size="sm" asChild>
+                                <Link href={`/dashboard/report/${scan.id}`}>
+                                View <ArrowRight className="ml-2 h-4 w-4" />
+                                </Link>
+                            </Button>
+                            </TableCell>
+                        </TableRow>
+                        ))}
+                    </TableBody>
+                    </Table>
+                )}
+            </CardContent>
+        </Card>
       </div>
-
-      {/* Scans List */}
-      <>
-          {filteredScans.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredScans.map((scan) => (
-                <ScanCard key={scan.id} scan={scan} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted-foreground">
-              {scans.length === 0
-                ? "No scans yet. Start by scanning a URL!"
-                : "No scans match your filters."}
-            </div>
-          )}
-      </>
     </div>
   );
 }
