@@ -14,6 +14,8 @@ import { Shield, AlertTriangle, CheckCircle, Clock, Sparkles, Loader2 } from "lu
 import Link from "next/link";
 import { useFeature, useFeatureGate } from "@/lib/useFeatureGate";
 
+import { ScanProgressOverlay } from "@/components/ScanProgressOverlay";
+
 export default function DashboardPage() {
   const { user, isFeatureAvailable } = useFeatureGate();
   const [scans, setScans] = useState<Scan[]>([]);
@@ -97,6 +99,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      <ScanProgressOverlay isVisible={isScanning} />
+
       {/* Debug Banner - Temporary */}
       {/* Debug Banner - Always Visible */}
 

@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { Shield, Globe, Loader2, AlertCircle } from "lucide-react";
 
+import { ScanProgressOverlay } from "@/components/ScanProgressOverlay";
+
 export default function NewScanPage() {
   const [url, setUrl] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -48,6 +50,7 @@ export default function NewScanPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-8">
+      <ScanProgressOverlay isVisible={isScanning} />
       <div className="mb-8">
         <h1 className="text-3xl font-bold">New Security Scan</h1>
         <p className="text-muted-foreground mt-1">
