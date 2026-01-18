@@ -54,7 +54,8 @@ export default function DashboardPage() {
   const loadScans = async () => {
     try {
       const data = await api.getScans();
-      setScans(data.results || []);
+      // api.getScans already handles unwrapping, so we use data directly
+      setScans(Array.isArray(data) ? data : []);
     } catch (err) {
       setError("Failed to load scans");
     } finally {

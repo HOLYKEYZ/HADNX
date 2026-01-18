@@ -100,12 +100,6 @@ class ScanViewSet(viewsets.ModelViewSet):
         parsed = urlparse(url)
         domain = parsed.netloc
         
-        # DEBUG LOGGING
-        print(f"DEBUG: Creating scan for {url}")
-        print(f"DEBUG: User Authenticated: {request.user.is_authenticated}")
-        print(f"DEBUG: User: {request.user}")
-        print(f"DEBUG: Session ID: {request.session.session_key}")
-
         # Create scan record
         scan = Scan.objects.create(
             url=url,
@@ -113,7 +107,6 @@ class ScanViewSet(viewsets.ModelViewSet):
             user=request.user if request.user.is_authenticated else None,
             status=Scan.Status.PENDING
         )
-        print(f"DEBUG: Scan Created: {scan.id} (Owner: {scan.user})")
         
         # Determine strict limit for anonymous users (2 trials)
         if not request.user.is_authenticated:
