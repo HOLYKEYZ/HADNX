@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Security Scan Report - {{ scan.domain }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+            @frame footer_frame {
+                -pdf-frame-content: footerContent;
+                bottom: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+            @frame header_frame {
+                -pdf-frame-content: headerContent;
+                top: 1cm;
+                margin-left: 2cm;
+                margin-right: 2cm;
+                height: 1cm;
+            }
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 11pt;
+            color: #333;
+            line-height: 1.5;
+        }
+        
+        h1 { font-size: 24pt; color: #000; margin-bottom: 20px; }
+        h2 { font-size: 18pt; color: #1a73e8; margin-top: 30px; border-bottom: 2px solid #ddd; padding-bottom: 5px; }
+        h3 { font-size: 14pt; color: #444; margin-top: 20px; }
+        
+        .cover-page {
+            text-align: center;
+            padding-top: 200px;
+        }
+        
+        .score-circle {
+            font-size: 48pt;
+            font-weight: bold;
+            color: #1a73e8;
+            margin: 20px auto;
+        }
+        
+        .meta-table {
+            width: 100%;
+            margin-top: 50px;
+            border-collapse: collapse;
+        }
+        .meta-table td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .meta-label { font-weight: bold; color: #666; width: 40%; text-align: right; padding-right: 20px; }
+        .meta-value { text-align: left; }
+        
+        /* Badges */
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            font-size: 10pt;
+            display: inline-block;
+        }
+        .bg-critical { background-color: #dc3545; }
+        .bg-high { background-color: #fd7e14; }
+        .bg-medium { background-color: #ffc107; color: #333; }
+        .bg-low { background-color: #28a745; }
+        .bg-info { background-color: #17a2b8; }
+        
+        .finding-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+        }
+        
+        .section-header {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+            font-size: 10pt;
+            text-transform: uppercase;
+        }
+        
+        .code-block {
+            background-color: #2d2d2d;
+            color: #f8f8f2;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: Courier, monospace;
+            font-size: 9pt;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 5px;
+        }
+        
+        .ai-narrative {
+            background-color: #e8f0fe;
+            border-left: 5px solid #1a73e8;
+            padding: 15px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        
+        table.stats {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        table.stats th, table.stats td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        table.stats th {
+            background-color: #f2f2f2;
+        }
+
+        /* Footer/Header */
+        #headerContent { font-size: 9pt; color: #999; text-align: right; }
+        #footerContent { font-size: 9pt; color: #999; text-align: center; }
+    </style>
+</head>
+<body>
+    <!-- Header/Footer defined in CSS frames -->
+    <div id="headerContent">Hadnx Security Report - Confidential</div>
+    <div id="footerContent">Page <pdf:pagenumber> / <pdf:pagecount></div>
+
+    <!-- Page 1: Cover -->
+    <div class="cover-page">
+        <h1>SECURITY ASSESSMENT REPORT</h1>
+        <div class="score-circle">
+            {{ scan.grade|default:"N/A" }}
+        </div>
+        <p style="font-size: 18pt;">Score: {{ scan.overall_score|default:"--" }}/100</p>
+        
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">Target Domain:</td>
+                <td class="meta-value">{{ scan.domain }}</td>
+            </tr>
+             <tr>
+                <td class="meta-label">Scan Date:</td>
+                <td class="meta-value">{{ scan.created_at|date:"F j, Y H:i" }}</td>
+            </tr>
+             <tr>
+                <td class="meta-label">Report Generated:</td>
+                <td class="meta-value">{{ generated_at|date:"F j, Y H:i" }}</td>
+            </tr>
+             <tr>
+                <td class="meta-label">Scan ID:</td>
+                <td class="meta-value">{{ scan.id }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <pdf:nextpage />
+    
+    <!-- Page 2: Executive Summary -->
+    <h2>Executive Summary</h2>
+    
+    {% if ai_narrative %}
+    <div class="ai-narrative">
+        <h3>🤖 AI Strategic Analysis</h3>
+        {{ ai_narrative|safe }}
+    </div>
+    {% endif %}
+
+    <h3>Findings Overview</h3>
+    <table class="stats">
+        <tr>
+            <th>Severity</th>
+            <th>Count</th>
+        </tr>
+        {% for severity, count in severity_counts.items %}
+        <tr>
+            <td>
+                <span class="badge bg-{{ severity|lower }}">{{ severity|title }}</span>
+            </td>
+            <td>{{ count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    <h3>Compliance Checks</h3>
+    <table class="stats">
+        <tr><th>Category</th><th>Score</th></tr>
+        <tr><td>HTTP Headers</td><td>{{ scan.headers_score }}/100</td></tr>
+        <tr><td>Cookies</td><td>{{ scan.cookies_score }}/100</td></tr>
+        <tr><td>TLS/SSL</td><td>{{ scan.tls_score }}/100</td></tr>
+    </table>
+
+    <pdf:nextpage />
+    
+    <!-- Page 3+: Detailed Findings -->
+    <h2>Detailed Technical Findings</h2>
+    
+    {% for finding in findings %}
+    <div class="finding-card">
+        <div style="margin-bottom: 10px;">
+            <span class="badge bg-{{ finding.severity|lower }}">{{ finding.severity }}</span>
+            <span style="font-weight: bold; font-size: 12pt; margin-left: 10px;">{{ finding.issue }}</span>
+        </div>
+        
+        <div class="section-header">Description</div>
+        <p>{{ finding.description }}</p>
+        
+        <div class="section-header">Impact</div>
+        <p>{{ finding.impact }}</p>
+        
+        <div class="section-header">Recommendation</div>
+        <p>{{ finding.recommendation }}</p>
+        
+        {% if finding.evidence %}
+        <div class="section-header">Evidence</div>
+        <div class="code-block">{{ finding.evidence|truncatechars:500 }}</div>
+        {% endif %}
+        
+        {% if finding.poc %}
+        <div class="section-header">Proof of Concept</div>
+        <div class="code-block">{{ finding.poc }}</div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <p>No vulnerabilities found via automated scanning.</p>
+    {% endfor %}
+    
+</body>
+</html>

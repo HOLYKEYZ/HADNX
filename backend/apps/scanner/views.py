@@ -7,6 +7,10 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.http import FileResponse
+import io
+
+from .services.pdf_generator import PDFGenerator
 
 from .models import Scan
 from .serializers import (
@@ -134,6 +138,30 @@ class ScanViewSet(viewsets.ModelViewSet):
         scan = get_object_or_404(Scan, pk=pk)
         serializer = ScanStatusSerializer(scan)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], url_path='export/pdf')
+    def export_pdf(self, request, pk=None):
+        """Export scan report as PDF."""
+        scan = self.get_object()
+        
+        pdf_content = PDFGenerator.generate_report(scan)
+        
+        if not pdf_content:
+            return Response(
+                {"error": "Failed to generate PDF"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+            
+        filename = f"Hadnx_Report_{scan.domain}_{scan.created_at.strftime('%Y%m%d')}.pdf"
+        
+        response = FileResponse(
+            io.BytesIO(pdf_content),
+            as_attachment=True,
+            filename=filename,
+            content_type='application/pdf'
+        )
+        return response
+    
     
     def destroy(self, request, *args, **kwargs):
         """Delete a scan and its findings."""

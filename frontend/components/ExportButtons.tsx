@@ -16,7 +16,20 @@ export function ExportButtons({ scanId }: ExportButtonsProps) {
     setExporting(format);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:9001/api";
-      const response = await fetch(`${API_URL}/reports/${scanId}/export/?format=${format}`, {
+      
+      let endpoint = "";
+      if (format === "pdf") {
+        endpoint = `${API_URL}/scans/${scanId}/export/pdf/`;
+      } else {
+        // Fallback for JSON (just get details) or future implementation
+        endpoint = `${API_URL}/scans/${scanId}/`; 
+      }
+
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
         credentials: "include",
       });
       
