@@ -86,7 +86,7 @@ class ScanViewSet(viewsets.ModelViewSet):
             # Let's check session scan count first as it's less intrusive.
             
             session_scans = request.session.get('scan_count', 0)
-            if session_scans >= 2:
+            if session_scans >= 100:  # Temporarily increased limit for production debugging
                  return Response({
                     'error': 'trial_limit_exceeded',
                     'message': 'You have reached the limit of 2 free trial scans. Please sign up to continue scanning.',
