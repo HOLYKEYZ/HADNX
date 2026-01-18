@@ -40,13 +40,15 @@ export default function DashboardPage() {
     setIsScanning(true);
     try {
       const data = await api.startScan(targetUrl);
-      router.push(`/dashboard/scan/${data.id}`);
+      // Wait for navigation before resetting state (though unmount happens first usually)
+      await router.push(`/dashboard/scan/${data.id}`);
     } catch (err) {
       console.error("Scan failed:", err);
+      setIsScanning(false); // Only reset on error
       // Optional: show error toast
-    } finally {
-      setIsScanning(false);
+      alert("Failed to start scan. Please try again.");
     } 
+    // Do NOT finally { setIsScanning(false) } because we want it to stay loading during transition 
   };
 
   const loadScans = async () => {
@@ -114,6 +116,7 @@ export default function DashboardPage() {
             value={scanUrl}
             onChange={(e) => setScanUrl(e.target.value)}
             className="flex-1 md:w-80 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={isScanning}
           />
           <Button type="submit" disabled={isScanning || !scanUrl.trim()}>
             {isScanning ? "Scanning..." : "Scan"}
