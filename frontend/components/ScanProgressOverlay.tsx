@@ -10,13 +10,13 @@ interface ScanProgressOverlayProps {
 }
 
 const SCAN_STEPS = [
-  { icon: Search, label: "Resolving target DNS...", duration: 800 },
-  { icon: Server, label: "Fingerprinting server & WAF...", duration: 1200 },
-  { icon: Lock, label: "Analyzing SSL/TLS Configuration...", duration: 1000 },
-  { icon: Shield, label: "Checking HTTP Security Headers...", duration: 900 },
-  { icon: Search, label: "Scanning for Sensitive Cookies...", duration: 800 },
-  { icon: Brain, label: "Running AI Heuristic Analysis...", duration: 1500 },
-  { icon: CheckCircle2, label: "Finalizing Security Score...", duration: 1000 },
+  { icon: Search, label: "Resolving target DNS...", duration: 4000 },
+  { icon: Server, label: "Fingerprinting server & WAF...", duration: 5500 },
+  { icon: Lock, label: "Analyzing SSL/TLS Configuration...", duration: 5000 },
+  { icon: Shield, label: "Checking HTTP Security Headers...", duration: 4500 },
+  { icon: Search, label: "Scanning for Sensitive Cookies...", duration: 4000 },
+  { icon: Brain, label: "Running AI Heuristic Analysis...", duration: 8000 }, // AI takes longer
+  { icon: CheckCircle2, label: "Finalizing Security Score...", duration: 3000 },
 ];
 
 export function ScanProgressOverlay({ isVisible }: ScanProgressOverlayProps) {
