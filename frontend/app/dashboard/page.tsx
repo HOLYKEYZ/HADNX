@@ -10,7 +10,7 @@ import { CategoryScores } from "@/components/charts/CategoryScores";
 import { ScanCard } from "@/components/ScanCard";
 import { api, type Scan } from "@/lib/api";
 
-import { Shield, AlertTriangle, CheckCircle, Clock, Sparkles } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, Clock, Sparkles, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useFeature, useFeatureGate } from "@/lib/useFeatureGate";
 
@@ -119,7 +119,14 @@ export default function DashboardPage() {
             disabled={isScanning}
           />
           <Button type="submit" disabled={isScanning || !scanUrl.trim()}>
-            {isScanning ? "Scanning..." : "Scan"}
+            {isScanning ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Starting...
+              </>
+            ) : (
+              "Scan"
+            )}
           </Button>
         </form>
       </div>
