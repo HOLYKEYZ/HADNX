@@ -146,7 +146,14 @@ export const api = {
     return r.json();
   }),
 
-  getScans: () => fetchWithAuth("/scans/").then(r => r.json()),
+  getScans: () => fetchWithAuth("/scans/").then(async r => {
+    const data = await r.json();
+    // Handle DRF pagination (data.results)
+    if (data.results && Array.isArray(data.results)) {
+        return data.results;
+    }
+    return Array.isArray(data) ? data : [];
+  }),
   
   getScan: (id: string) => fetchWithAuth(`/scans/${id}/`).then(r => r.json()),
   
