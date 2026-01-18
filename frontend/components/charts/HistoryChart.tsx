@@ -2,9 +2,9 @@
 
 import { Scan } from "@/lib/api";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -50,31 +50,46 @@ export function HistoryChart({ scans }: HistoryChartProps) {
       <CardContent>
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart
+            <AreaChart
               data={data}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" />
+              <defs>
+                <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={true} stroke="hsl(var(--muted-foreground))" strokeOpacity={0.2} />
               <XAxis 
                 dataKey="date" 
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
                 className="text-xs text-muted-foreground" 
-                tick={{ fill: 'currentColor' }}
+                tick={{ fill: 'currentColor', fontSize: 10 }}
               />
               <YAxis 
                 domain={[0, 100]} 
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
                 className="text-xs text-muted-foreground"
-                tick={{ fill: 'currentColor' }} 
+                tick={{ fill: 'currentColor', fontSize: 10 }} 
               />
               <Tooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-background border border-border p-2 rounded shadow-lg text-sm">
-                        <p className="font-medium">{label}</p>
-                        <p className="text-primary font-bold">
-                          Score: {payload[0].value}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                      <div className="bg-popover border border-border p-3 rounded-lg shadow-xl text-sm ring-1 ring-black/5">
+                        <p className="font-semibold mb-1">{label}</p>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-primary" />
+                            <p className="text-foreground font-medium">
+                            Score: <span className="text-primary">{payload[0].value}</span>
+                            </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2 border-t pt-2 border-border/50">
                           {payload[0].payload.domain}
                         </p>
                       </div>
@@ -83,15 +98,16 @@ export function HistoryChart({ scans }: HistoryChartProps) {
                   return null;
                 }}
               />
-              <Line
+              <Area
                 type="monotone"
                 dataKey="score"
                 stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                dot={{ r: 4, fill: "hsl(var(--background))", strokeWidth: 2 }}
-                activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorScore)"
+                activeDot={{ r: 6, strokeWidth: 0, fill: "hsl(var(--primary))" }}
               />
-            </LineChart>
+            </AreaChart>
           </ResponsiveContainer>
         </div>
       </CardContent>
