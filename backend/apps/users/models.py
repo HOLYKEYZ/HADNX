@@ -11,6 +11,13 @@ class User(AbstractUser):
     # Additional fields for security scanning users
     organization = models.CharField(max_length=255, blank=True)
     
+    # Exploitation framework - authorized domains
+    authorized_domains = models.JSONField(
+        default=list,
+        blank=True,
+        help_text="List of domains this user is authorized to perform active exploitation on"
+    )
+    
     # Track user activity
     scans_count = models.IntegerField(default=0)
     last_scan_at = models.DateTimeField(null=True, blank=True)

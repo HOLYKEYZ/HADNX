@@ -47,6 +47,12 @@ class Scan(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)
     error_message = models.TextField(blank=True)
     
+    # Exploitation framework
+    exploitation_enabled = models.BooleanField(
+        default=False,
+        help_text="Enable active exploitation testing (requires authorized domain)"
+    )
+    
     # Raw response data (for debugging)
     response_headers = models.JSONField(default=dict, blank=True)
     

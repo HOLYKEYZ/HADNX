@@ -138,9 +138,9 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
 
 export const api = {
   // Scans
-  startScan: (url: string) => fetchWithAuth("/scans/", {
+  startScan: (url: string, options?: { exploitation_enabled?: boolean }) => fetchWithAuth("/scans/", {
     method: "POST",
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, exploitation_enabled: options?.exploitation_enabled || false }),
   }).then(async r => {
     if (!r.ok) throw await r.json();
     return r.json();

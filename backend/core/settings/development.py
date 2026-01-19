@@ -1,7 +1,13 @@
 """
 Development settings for Hadnx.
 """
+from pathlib import Path
+from dotenv import load_dotenv
 from .base import *
+
+# Load .env file from backend directory
+env_path = Path(__file__).resolve().parent.parent.parent / '.env'
+load_dotenv(env_path)
 
 DEBUG = True
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '*']

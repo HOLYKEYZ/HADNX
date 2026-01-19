@@ -94,6 +94,15 @@ export default function ReportPage() {
     malware: <Skull className="w-5 h-5" />,
     threat_intel: <Activity className="w-5 h-5" />,
     ai_analysis: <BrainCircuit className="w-5 h-5" />,
+    // Exploitation categories
+    xss: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    sqli: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    lfi: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    ssrf: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    auth_bypass: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    file_upload: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    command_injection: <AlertTriangle className="w-5 h-5 text-destructive" />,
+    exploitation: <AlertTriangle className="w-5 h-5 text-destructive" />,
   };
 
   const CopyButton = ({ text }: { text: string }) => {

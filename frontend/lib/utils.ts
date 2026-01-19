@@ -50,6 +50,20 @@ export function getCategoryLabel(category: string): string {
     tls: "TLS/SSL",
     https: "HTTPS",
     info_disclosure: "Info Disclosure",
+    recon: "Reconnaissance",
+    waf: "WAF Detection",
+    malware: "Malware",
+    threat_intel: "Threat Intelligence",
+    ai_analysis: "AI Analysis",
+    // Exploitation categories
+    xss: "Cross-Site Scripting (XSS)",
+    sqli: "SQL Injection",
+    lfi: "Local File Inclusion",
+    ssrf: "Server-Side Request Forgery",
+    auth_bypass: "Authentication Bypass",
+    file_upload: "File Upload Vulnerability",
+    command_injection: "Command Injection",
+    exploitation: "Exploitation",
   };
   return labels[category] || category;
 }

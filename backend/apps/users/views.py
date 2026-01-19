@@ -73,7 +73,12 @@ def logout_view(request):
 def me_view(request):
     """Get current authenticated user. Returns empty object if not authenticated."""
     if request.user.is_authenticated:
-        return Response(UserSerializer(request.user).data)
+        from apps.scanner.services.exploit.scope_validator import is_exploitation_admin
+        user_data = UserSerializer(request.user).data
+        # Add exploitation admin status and domains
+        user_data['is_exploitation_admin'] = is_exploitation_admin(request.user)
+        user_data['authorized_domains'] = request.user.authorized_domains or []
+        return Response(user_data)
     return Response({})  # Return empty object, not None (which creates empty body)
 
 
@@ -82,3 +87,62 @@ def me_view(request):
 def csrf_view(request):
     """Get CSRF token for forms."""
     return Response({'csrfToken': get_token(request)})
+
+
+@api_view(['GET', 'POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def authorized_domains_view(request):
+    """
+    Manage authorized domains for exploitation.
+    Only available to exploitation admin.
+    """
+    from apps.scanner.services.exploit.scope_validator import is_exploitation_admin
+    
+    # Check admin status
+    if not is_exploitation_admin(request.user):
+        return Response(
+            {'error': 'Exploitation features are restricted to authorized administrators'},
+            status=status.HTTP_403_FORBIDDEN
+        )
+    
+    if request.method == 'GET':
+        # Return current list
+        return Response({
+            'domains': request.user.authorized_domains or [],
+            'is_admin': True
+        })
+    
+    elif request.method == 'POST':
+        # Add domain
+        domain = request.data.get('domain', '').strip().lower()
+        if not domain:
+            return Response({'error': 'Domain is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        domains = request.user.authorized_domains or []
+        if domain not in domains:
+            domains.append(domain)
+            request.user.authorized_domains = domains
+            request.user.save()
+        
+        return Response({
+            'domains': request.user.authorized_domains,
+            'message': f'Domain {domain} added'
+        })
+    
+    elif request.method == 'DELETE':
+        # Remove domain
+        domain = request.data.get('domain', '').strip().lower()
+        if not domain:
+            return Response({'error': 'Domain is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        domains = request.user.authorized_domains or []
+        if domain in domains:
+            domains.remove(domain)
+            request.user.authorized_domains = domains
+            request.user.save()
+        
+        return Response({
+            'domains': request.user.authorized_domains,
+            'message': f'Domain {domain} removed'
+        })
+

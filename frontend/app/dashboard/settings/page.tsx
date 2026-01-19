@@ -1,10 +1,94 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Moon, Bell, Info } from "lucide-react";
+import { Shield, Moon, Info, Plus, X, AlertTriangle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 
 export default function SettingsPage() {
+  const [user, setUser] = useState<any>(null);
+  const [domains, setDomains] = useState<string[]>([]);
+  const [newDomain, setNewDomain] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [addingDomain, setAddingDomain] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  const loadUser = async () => {
+    try {
+      const userData = await api.me();
+      setUser(userData);
+      setDomains(userData.authorized_domains || []);
+    } catch (e) {
+      console.error("Failed to load user:", e);
+    }
+  };
+
+  const addDomain = async () => {
+    if (!newDomain.trim()) return;
+    
+    setAddingDomain(true);
+    setError("");
+    
+    // Use correct API URL (localhost in dev, or NEXT_PUBLIC_API_URL in prod)
+    const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+      ? 'http://localhost:9001' 
+      : (process.env.NEXT_PUBLIC_API_URL || '');
+    
+    try {
+      const response = await fetch(`${apiBase}/api/auth/authorized-domains/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ domain: newDomain.trim().toLowerCase() }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDomains(data.domains || []);
+        setNewDomain("");
+      } else {
+        const data = await response.json();
+        setError(data.error || "Failed to add domain");
+      }
+    } catch (e) {
+      setError("Network error");
+    } finally {
+      setAddingDomain(false);
+    }
+  };
+
+  const removeDomain = async (domain: string) => {
+    setLoading(true);
+    
+    const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+      ? 'http://localhost:9001' 
+      : (process.env.NEXT_PUBLIC_API_URL || '');
+    
+    try {
+      const response = await fetch(`${apiBase}/api/auth/authorized-domains/`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ domain }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDomains(data.domains || []);
+      }
+    } catch (e) {
+      console.error("Failed to remove domain:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isExploitAdmin = user?.is_exploitation_admin;
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -60,6 +144,101 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Exploitation Admin Section - Only visible to admin */}
+        {isExploitAdmin && (
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                Active Exploitation (Admin Only)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                <p className="text-sm text-destructive font-medium">⚠ DANGER ZONE</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Active exploitation performs real attacks (XSS, SQLi, etc.) against targets.
+                  Only add domains you OWN or have WRITTEN authorization to test.
+                </p>
+              </div>
+
+              <div>
+                <p className="font-medium mb-2">Your Authorized Domains</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Domains where active exploitation is permitted. Use *.example.com for wildcards.
+                </p>
+                
+                {/* Add domain form */}
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    value={newDomain}
+                    onChange={(e) => setNewDomain(e.target.value)}
+                    placeholder="example.com or *.example.com"
+                    className="flex-1 h-10 px-3 rounded-lg bg-card border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none text-sm"
+                    onKeyDown={(e) => e.key === "Enter" && addDomain()}
+                  />
+                  <button
+                    onClick={addDomain}
+                    disabled={addingDomain || !newDomain.trim()}
+                    className="h-10 px-4 rounded-lg bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {addingDomain ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Add
+                  </button>
+                </div>
+
+                {error && (
+                  <p className="text-sm text-destructive mb-3">{error}</p>
+                )}
+                
+                {/* Domain list */}
+                <div className="space-y-2">
+                  {domains.length === 0 ? (
+                    <div className="text-sm text-muted-foreground text-center py-6 border border-dashed border-border rounded-lg">
+                      No authorized domains. Add domains above to enable exploitation.
+                    </div>
+                  ) : (
+                    domains.map((domain) => (
+                      <div
+                        key={domain}
+                        className="flex items-center justify-between p-3 rounded-lg bg-card border border-border"
+                      >
+                        <span className="font-mono text-sm">{domain}</span>
+                        <button
+                          onClick={() => removeDomain(domain)}
+                          disabled={loading}
+                          className="p-1 hover:bg-destructive/10 rounded text-destructive transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Non-admin notice */}
+        {user && !isExploitAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                Active Exploitation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Active exploitation features are restricted to authorized administrators.
+                Contact your system administrator for access.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -91,7 +270,7 @@ export default function SettingsPage() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Version</span>
-                <span>1.0.0</span>
+                <span>2.0.0 (Exploitation Engine)</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Backend</span>
@@ -101,6 +280,12 @@ export default function SettingsPage() {
                 <span className="text-muted-foreground">Frontend</span>
                 <span>Next.js 14</span>
               </div>
+              {isExploitAdmin && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Admin Status</span>
+                  <span className="text-destructive font-medium">Exploitation Admin ✓</span>
+                </div>
+              )}
             </div>
             
             <div className="pt-4 border-t border-border">

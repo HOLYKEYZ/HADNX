@@ -130,6 +130,79 @@ def run_security_scan(self, scan_id: str):
         https_findings = analyze_https_posture(scan.url, html_content)
         all_findings.extend([f.to_dict() for f in https_findings])
 
+        # === ACTIVE EXPLOITATION (Conditional) ===
+        if scan.exploitation_enabled:
+            logger.info("🔴 ACTIVE EXPLOITATION ENABLED - Validating scope...")
+            
+            # Scope validation
+            from .services.exploit.scope_validator import ScopeValidator
+            try:
+                ScopeValidator.validate_or_raise(scan.url, scan.user)
+                logger.info("✅ Scope validated - proceeding with active exploitation")
+                
+                # XSS Exploitation
+                logger.info("Testing for XSS vulnerabilities...")
+                from .services.exploit.xss_exploiter import run_xss_exploitation
+                xss_findings = run_xss_exploitation(scan.url)
+                all_findings.extend(xss_findings)
+                
+                # SQL Injection
+                logger.info("Testing for SQL injection...")
+                from .services.exploit.sqli_exploiter import run_sqli_exploitation
+                sqli_findings = run_sqli_exploitation(scan.url)
+                all_findings.extend(sqli_findings)
+                
+                # Command Injection
+                logger.info("Testing for command injection...")
+                from .services.exploit.command_injection import run_command_injection_exploitation
+                cmdi_findings = run_command_injection_exploitation(scan.url)
+                all_findings.extend(cmdi_findings)
+                
+                # LFI/RFI
+                logger.info("Testing for file inclusion vulnerabilities...")
+                from .services.exploit.lfi_exploiter import run_lfi_exploitation
+                lfi_findings = run_lfi_exploitation(scan.url)
+                all_findings.extend(lfi_findings)
+                
+                # SSRF
+                logger.info("Testing for SSRF vulnerabilities...")
+                from .services.exploit.ssrf_exploiter import run_ssrf_exploitation
+                ssrf_findings = run_ssrf_exploitation(scan.url)
+                all_findings.extend(ssrf_findings)
+                
+                # Auth Bypass
+                logger.info("Testing for authentication bypass...")
+                from .services.exploit.auth_bypass import run_auth_bypass_exploitation
+                auth_findings = run_auth_bypass_exploitation(scan.url)
+                all_findings.extend(auth_findings)
+                
+                # File Upload
+                logger.info("Testing for file upload vulnerabilities...")
+                from .services.exploit.file_upload import run_file_upload_exploitation
+                upload_findings = run_file_upload_exploitation(scan.url)
+                all_findings.extend(upload_findings)
+                
+                total_exploit_findings = (
+                    len(xss_findings) + len(sqli_findings) + len(cmdi_findings) + 
+                    len(lfi_findings) + len(ssrf_findings) + len(auth_findings) + len(upload_findings)
+                )
+                logger.info(f"🔴 Active exploitation complete. Found {total_exploit_findings} vulnerabilities")
+            
+            except PermissionError as e:
+                logger.error(f"Exploitation blocked: {e}")
+                all_findings.append({
+                    'issue': 'Exploitation Authorization Failed',
+                    'severity': 'INFO',
+                    'category': 'exploitation',
+                    'impact': str(e),
+                    'description': 'Active exploitation was enabled but the target domain is not authorized.',
+                    'recommendation': 'Add this domain to your Authorized Domains list in Settings.',
+                    'affected_element': scan.domain,
+                    'score_impact': 0
+                })
+        else:
+            logger.info("Active exploitation disabled for this scan")
+
         # Generate PoCs (Exploitation Sandbox) - Phase 2 Feature
         from .services.poc_generator import attach_pocs
         all_findings = attach_pocs(all_findings, scan.url)
