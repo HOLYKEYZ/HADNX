@@ -33,29 +33,13 @@ export default function SettingsPage() {
     setAddingDomain(true);
     setError("");
     
-    // Use correct API URL (localhost in dev, or NEXT_PUBLIC_API_URL in prod)
-    const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-      ? 'http://localhost:9001' 
-      : (process.env.NEXT_PUBLIC_API_URL || '');
-    
     try {
-      const response = await fetch(`${apiBase}/api/auth/authorized-domains/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ domain: newDomain.trim().toLowerCase() }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDomains(data.domains || []);
-        setNewDomain("");
-      } else {
-        const data = await response.json();
-        setError(data.error || "Failed to add domain");
-      }
-    } catch (e) {
-      setError("Network error");
+      const data = await api.addAuthorizedDomain(newDomain.trim().toLowerCase());
+      setDomains(data.domains || []);
+      setNewDomain("");
+    } catch (e: any) {
+      console.error("Failed to add domain:", e);
+      setError(e.error || e.detail || "Failed to add domain");
     } finally {
       setAddingDomain(false);
     }
@@ -63,23 +47,9 @@ export default function SettingsPage() {
 
   const removeDomain = async (domain: string) => {
     setLoading(true);
-    
-    const apiBase = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-      ? 'http://localhost:9001' 
-      : (process.env.NEXT_PUBLIC_API_URL || '');
-    
     try {
-      const response = await fetch(`${apiBase}/api/auth/authorized-domains/`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ domain }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setDomains(data.domains || []);
-      }
+      const data = await api.removeAuthorizedDomain(domain);
+      setDomains(data.domains || []);
     } catch (e) {
       console.error("Failed to remove domain:", e);
     } finally {

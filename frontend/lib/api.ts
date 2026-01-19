@@ -200,6 +200,23 @@ export const api = {
   logout: () => fetchWithAuth("/auth/logout/", { method: "POST" }),
   
   me: () => fetchWithAuth("/auth/me/").then(r => r.json()),
+
+  // Authorized Domains
+  addAuthorizedDomain: (domain: string) => fetchWithAuth("/auth/authorized-domains/", {
+    method: "POST",
+    body: JSON.stringify({ domain }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  removeAuthorizedDomain: (domain: string) => fetchWithAuth("/auth/authorized-domains/", {
+    method: "DELETE",
+    body: JSON.stringify({ domain }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;

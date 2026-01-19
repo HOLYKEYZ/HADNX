@@ -114,7 +114,18 @@ def authorized_domains_view(request):
     
     elif request.method == 'POST':
         # Add domain
-        domain = request.data.get('domain', '').strip().lower()
+        raw_domain = request.data.get('domain', '').strip().lower()
+        
+        # Strip protocol and path
+        if '://' in raw_domain:
+            from urllib.parse import urlparse
+            try:
+                domain = urlparse(raw_domain).netloc
+            except:
+                domain = raw_domain
+        else:
+            domain = raw_domain.split('/')[0]
+            
         if not domain:
             return Response({'error': 'Domain is required'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -131,7 +142,18 @@ def authorized_domains_view(request):
     
     elif request.method == 'DELETE':
         # Remove domain
-        domain = request.data.get('domain', '').strip().lower()
+        raw_domain = request.data.get('domain', '').strip().lower()
+        
+        # Strip protocol and path for removal too, just in case
+        if '://' in raw_domain:
+            from urllib.parse import urlparse
+            try:
+                domain = urlparse(raw_domain).netloc
+            except:
+                domain = raw_domain
+        else:
+            domain = raw_domain.split('/')[0]
+
         if not domain:
             return Response({'error': 'Domain is required'}, status=status.HTTP_400_BAD_REQUEST)
         
