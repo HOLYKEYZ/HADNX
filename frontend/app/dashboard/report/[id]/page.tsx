@@ -30,7 +30,11 @@ import {
   Terminal, // PoC
   Copy,
   Check,
+  Bot,
 } from "lucide-react";
+
+import { AIChatDrawer } from "@/components/AIChatDrawer";
+import { Button } from "@/components/ui/button";
 
 export default function ReportPage() {
   const params = useParams();
@@ -40,6 +44,17 @@ export default function ReportPage() {
   const [complianceData, setComplianceData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatContext, setChatContext] = useState("");
+
+  const handleAskAI = (finding?: Finding) => {
+    if (finding) {
+        setChatContext(`I found a ${finding.severity} vulnerability: ${finding.issue} at ${finding.affected_element || 'unknown location'}. How do I verify and fix this?`);
+    } else {
+        setChatContext("");
+    }
+    setIsChatOpen(true);
+  };
 
   useEffect(() => {
     if (!scanId) return;
@@ -190,12 +205,30 @@ export default function ReportPage() {
         {Object.keys(finding.fix_examples).length > 0 && (
           <FixPanel fixExamples={finding.fix_examples} />
         )}
+        
+        <div className="flex items-center justify-end mt-4 pt-4 border-t border-border">
+            <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 text-primary hover:text-primary hover:bg-primary/10"
+                onClick={() => handleAskAI(finding)}
+            >
+                <Bot className="w-4 h-4" />
+                Ask AI Assistant
+            </Button>
+        </div>
       </div>
     );
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      <AIChatDrawer 
+        scanId={scanId} 
+        isOpen={isChatOpen} 
+        onClose={() => setIsChatOpen(false)} 
+        initialMessage={chatContext}
+      />
       {/* Report Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -212,6 +245,15 @@ export default function ReportPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+           {/* Ask AI Global Button */}
+           <Button 
+                variant="default" 
+                className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg shadow-blue-500/20"
+                onClick={() => handleAskAI()}
+           >
+                <Bot className="w-4 h-4" />
+                AI Consultant
+           </Button>
            {/* Export Buttons */}
           <ExportButtons scanId={scanId} />
           <ScoreGauge

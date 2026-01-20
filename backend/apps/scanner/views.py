@@ -11,6 +11,12 @@ from django.http import FileResponse
 import io
 
 from .services.pdf_generator import PDFGenerator
+from .services.pdf_generator import PDFGenerator
+from .services.ai_service import AIService
+from rest_framework.views import APIView
+import requests
+import time
+from .services.exploit.scope_validator import ScopeValidator
 
 from .models import Scan
 from .serializers import (
@@ -100,12 +106,15 @@ class ScanViewSet(viewsets.ModelViewSet):
         parsed = urlparse(url)
         domain = parsed.netloc
         
+        exploitation_enabled = serializer.validated_data.get('exploitation_enabled', False)
+
         # Create scan record
         scan = Scan.objects.create(
             url=url,
             domain=domain,
             user=request.user if request.user.is_authenticated else None,
-            status=Scan.Status.PENDING
+            status=Scan.Status.PENDING,
+            exploitation_enabled=exploitation_enabled
         )
         
         # Determine strict limit for anonymous users (2 trials)
@@ -139,30 +148,123 @@ class ScanViewSet(viewsets.ModelViewSet):
         serializer = ScanStatusSerializer(scan)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['post'])
+    def chat(self, request, pk=None):
+        """
+        Chat with AI about the scan.
+        Body: { messages: [...] }
+        """
+        scan = self.get_object()
+        messages = request.data.get('messages', [])
+        
+        # Build context from scan summary
+        context = f"""
+        Scan for: {scan.domain} ({scan.url})
+        Overall Grade: {scan.grade} (Score: {scan.overall_score})
+        Findings: {scan.findings.count()} total.
+        Critical: {scan.findings.filter(severity='CRITICAL').count()}
+        High: {scan.findings.filter(severity='HIGH').count()}
+        """
+        
+        response = AIService.chat(messages, context=context)
+        return Response(response)
+
+    @action(detail=True, methods=['post'])
+    def analyze_finding(self, request, pk=None):
+        """
+        Get expert analysis for a specific finding.
+        Body: { finding_id: <int> }
+        """
+        scan = self.get_object()
+        finding_id = request.data.get('finding_id')
+        
+        try:
+            finding = scan.findings.get(id=finding_id)
+            finding_data = {
+                'issue': finding.issue,
+                'category': finding.category,
+                'severity': finding.severity,
+                'affected_element': finding.affected_element,
+                'description': finding.description,
+                'evidence': finding.evidence
+            }
+            
+            response = AIService.analyze_finding(finding_data)
+            return Response(response)
+            
+        except Scan.findings.model.DoesNotExist:
+            return Response({'error': 'Finding not found'}, status=404)
+        serializer = ScanStatusSerializer(scan)
+        return Response(serializer.data)
+
     @action(detail=True, methods=['get'], url_path='export/pdf')
     def export_pdf(self, request, pk=None):
         """Export scan report as PDF."""
         scan = self.get_object()
+        buffer = PDFGenerator.generate(scan)
+        filename = f"hadnx_scan_{scan.domain}.pdf"
         
-        pdf_content = PDFGenerator.generate_report(scan)
-        
-        if not pdf_content:
-            return Response(
-                {"error": "Failed to generate PDF"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-            
-        filename = f"Hadnx_Report_{scan.domain}_{scan.created_at.strftime('%Y%m%d')}.pdf"
-        
-        response = FileResponse(
-            io.BytesIO(pdf_content),
+        return FileResponse(
+            buffer,
             as_attachment=True,
             filename=filename,
             content_type='application/pdf'
         )
-        return response
-    
     
     def destroy(self, request, *args, **kwargs):
         """Delete a scan and its findings."""
         return super().destroy(request, *args, **kwargs)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RepeaterView(APIView):
+    """
+    Interactive Repeater Tool.
+    Allows Users (Admins) to manually send HTTP requests to Authorized Domains.
+    """
+    
+    def post(self, request):
+        url = request.data.get('url')
+        method = request.data.get('method', 'GET').upper()
+        headers = request.data.get('headers', {})
+        body = request.data.get('body', None)
+        follow_redirects = request.data.get('follow_redirects', True)
+        
+        if not url:
+            return Response({'error': 'URL is required'}, status=400)
+            
+        # 1. Scope Validation
+        try:
+            ScopeValidator.validate_or_raise(url, request.user)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=403)
+            
+        # 2. Add User-Agent if missing
+        if 'User-Agent' not in headers:
+            headers['User-Agent'] = 'Hadnxjs/1.0 (Security Scanner)'
+            
+        # 3. Execute Request
+        try:
+            start_time = time.time()
+            resp = requests.request(
+                method,
+                url,
+                headers=headers,
+                data=body,
+                allow_redirects=follow_redirects,
+                timeout=10,
+                verify=False
+            )
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            
+            return Response({
+                'status': resp.status_code,
+                'status_text': resp.reason,
+                'headers': dict(resp.headers),
+                'body': resp.text,
+                'elapsed': elapsed_ms,
+                'url': resp.url
+            })
+            
+        except requests.RequestException as e:
+            return Response({'error': f"Request failed: {str(e)}"}, status=502)

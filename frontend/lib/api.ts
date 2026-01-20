@@ -24,6 +24,7 @@ export interface Scan {
   findings_count?: number;
   critical_count?: number;
   high_count?: number;
+  exploitation_enabled?: boolean;
 }
 
 export interface Finding {
@@ -214,6 +215,35 @@ export const api = {
     method: "DELETE",
     body: JSON.stringify({ domain }),
   }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  // AI & Chat
+  chatWithAI: (scanId: string, messages: any[]) => fetchWithAuth(`/scans/${scanId}/chat/`, {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  analyzeFinding: (scanId: string, findingId: number) => fetchWithAuth(`/scans/${scanId}/analyze_finding/`, {
+    method: "POST",
+    body: JSON.stringify({ finding_id: findingId }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  // Manual Tools
+  sendRepeaterRequest: (data: any) => fetchWithAuth("/scans/repeater/", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }).then(async r => {
+    // Return the response object even if status is not 200 (for 4xx/5xx debugging)
+    // The backend wraps the actual response in a 200 JSON with 'status' field,
+    // unless the Repeater itself crashes (502).
     if (!r.ok) throw await r.json();
     return r.json();
   }),

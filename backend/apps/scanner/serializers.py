@@ -30,7 +30,7 @@ class ScanListSerializer(serializers.ModelSerializer):
             'id', 'url', 'domain', 'status', 'overall_score', 'grade',
             'headers_score', 'cookies_score', 'tls_score', 'https_score',
             'created_at', 'completed_at', 'findings_count',
-            'critical_count', 'high_count'
+            'critical_count', 'high_count', 'exploitation_enabled'
         ]
         read_only_fields = ['id', 'domain', 'status', 'overall_score', 'grade',
                           'headers_score', 'cookies_score', 'tls_score', 'https_score',
@@ -58,7 +58,8 @@ class ScanDetailSerializer(serializers.ModelSerializer):
             'id', 'url', 'domain', 'status', 'overall_score', 'grade',
             'headers_score', 'cookies_score', 'tls_score', 'https_score',
             'created_at', 'completed_at', 'error_message',
-            'findings', 'findings_by_category', 'severity_distribution'
+            'findings', 'findings_by_category', 'severity_distribution',
+            'exploitation_enabled'
         ]
         read_only_fields = fields
     
@@ -85,6 +86,7 @@ class ScanDetailSerializer(serializers.ModelSerializer):
 class ScanCreateSerializer(serializers.Serializer):
     """Serializer for creating a new scan."""
     url = serializers.URLField(max_length=2048)
+    exploitation_enabled = serializers.BooleanField(default=False, required=False)
     
     def validate_url(self, value):
         """Validate and normalize URL."""
