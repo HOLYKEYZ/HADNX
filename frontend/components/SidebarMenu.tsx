@@ -13,6 +13,7 @@ import {
   Terminal,
   ShieldAlert,
   Database,
+  Network,
 } from "lucide-react";
 
 const menuItems = [
@@ -22,6 +23,7 @@ const menuItems = [
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
   { href: "/dashboard/tools/nuclei", icon: ShieldAlert, label: "Nuclei Scanner" },
   { href: "/dashboard/tools/sqlmap", icon: Database, label: "SQLMap Exploiter" },
+  { href: "/dashboard/tools/nmap", icon: Network, label: "Nmap Scanner" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

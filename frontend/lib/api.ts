@@ -271,6 +271,22 @@ export const api = {
     if (!r.ok) throw await r.json();
     return r.json();
   }),
+
+  runNmapScan: (target: string, ports: string = "1-1000") => fetchWithAuth("/scans/nmap/", {
+    method: "POST",
+    body: JSON.stringify({ target, ports }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  runZapAction: (body: any) => fetchWithAuth("/scans/zap/", {
+    method: "POST",
+    body: JSON.stringify(body),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;

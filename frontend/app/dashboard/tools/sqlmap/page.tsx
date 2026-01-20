@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Play, Database, AlertOctagon, Terminal, CheckCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function SQLMapPage() {
   const [url, setUrl] = useState("");
@@ -93,6 +99,22 @@ export default function SQLMapPage() {
                 <div className="text-muted-foreground opacity-50">Waiting for scan...</div>
             )}
         </div>
+      </Card>
+
+      {/* Help Section */}
+      <Card className="border-border">
+            <Accordion type="single" collapsible>
+                <AccordionItem value="help" className="border-b-0">
+                    <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:no-underline">
+                        <span className="flex items-center gap-2"><CheckCircle className="w-4 h-4" /> How to Use SQLMap</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-2">
+                        <p><strong>Target:</strong> You MUST provide parameters to test. (e.g. <code>http://test.com/index.php?id=1</code>).</p>
+                        <p><strong>Process:</strong> The backend runs <code>sqlmap --batch --smart --dbs --random-agent</code>.</p>
+                        <p><strong>Output:</strong> The raw console output is streamed here. Look for "Parameter: id (GET)... Type: boolean-based blind" or similar success messages.</p>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
       </Card>
     </div>
   );

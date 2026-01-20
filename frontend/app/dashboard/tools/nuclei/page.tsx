@@ -6,6 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Play, AlertTriangle, ShieldAlert, CheckCircle, Info } from "lucide-react";
 import { api } from "@/lib/api";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 export default function NucleiPage() {
   const [url, setUrl] = useState("");
@@ -123,6 +129,22 @@ export default function NucleiPage() {
             </Card>
         ))}
       </div>
+
+      {/* Help Section */}
+      <Card className="border-border">
+            <Accordion type="single" collapsible>
+                <AccordionItem value="help" className="border-b-0">
+                    <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:no-underline">
+                        <span className="flex items-center gap-2"><Info className="w-4 h-4" /> How to Use Nuclei</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-2">
+                        <p><strong>Target:</strong> Enter a full URL (e.g. <code>https://example.com</code> or <code>http://10.10.10.5</code>).</p>
+                        <p><strong>What it does:</strong> Runs a fast, template-based scan against the target to find known CVEs, misconfigurations, and specific technology exposures.</p>
+                        <p><strong>Results:</strong> Vulnerabilities are listed by severity. Critical/High findings are highlighted in red.</p>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+      </Card>
     </div>
   );
 }

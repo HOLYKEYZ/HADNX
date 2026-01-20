@@ -19,6 +19,8 @@ import time
 from .services.exploit.scope_validator import ScopeValidator
 from .services.tools.nuclei_service import NucleiService
 from .services.tools.sqlmap_service import SQLMapService
+from .services.tools.nmap_service import NmapService
+from .services.tools.zap_service import ZapService
 
 from .models import Scan
 from .serializers import (
@@ -382,3 +384,69 @@ class SQLMapScanView(APIView):
              return Response(result, status=status_code)
              
         return Response(result)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class NmapScanView(APIView):
+    """
+    Runs Nmap Scan.
+    Requires nmap installed on server.
+    """
+    def post(self, request):
+        target = request.data.get('target') # IP or hostname
+        ports = request.data.get('ports', '1-1000')
+        
+        if not target:
+             return Response({'error': 'Target is required'}, status=400)
+             
+        # 1. Scope Validation
+        try:
+             ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+             return Response({'error': str(e)}, status=403)
+             
+        # 2. Run Scan
+        result = NmapService.run_scan(target, ports)
+        
+        # 3. Handle Errors
+        if 'error' in result:
+             status_code = 500
+             if 'Nmap not found' in result.get('error', ''):
+                 status_code = 503
+             return Response(result, status=status_code)
+             
+        return Response(result)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ZapScanView(APIView):
+    """
+    Control ZAP Scanner.
+    """
+    def post(self, request):
+        action = request.data.get('action') # 'spider', 'active_scan', 'status', 'alerts'
+        target = request.data.get('url')
+        scan_id = request.data.get('scan_id')
+        
+        # Connection Check
+        if action == 'check':
+             return Response(ZapService.check_connection())
+             
+        if not target and action in ['spider', 'active_scan', 'alerts']:
+             return Response({'error': 'Target URL is required'}, status=400)
+             
+        if action == 'spider':
+             return Response(ZapService.spider_scan(target))
+             
+        elif action == 'active_scan':
+             return Response(ZapService.active_scan(target))
+             
+        elif action == 'status':
+             if not scan_id: return Response({'error': 'Scan ID required'}, status=400)
+             scan_type = request.data.get('scan_type', 'spider')
+             return Response(ZapService.get_status(scan_id, scan_type))
+             
+        elif action == 'alerts':
+             return Response(ZapService.get_alerts(target))
+             
+        return Response({'error': 'Invalid action'}, status=400)

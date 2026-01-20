@@ -6,8 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Send, Play, Save, History, Trash2, ArrowRight } from "lucide-react";
+import { Send, Play, Save, History, Trash2, ArrowRight, HelpCircle } from "lucide-react";
 import { api } from "@/lib/api";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 type Method = "GET" | "POST" | "PUT" | "DELETE" | "PATCH" | "HEAD" | "OPTIONS";
 
@@ -163,6 +169,22 @@ export default function RepeaterPage() {
             </div>
         </Card>
       </div>
+
+      {/* Help Section */}
+      <Card className="border-border">
+            <Accordion type="single" collapsible>
+                <AccordionItem value="help" className="border-b-0">
+                    <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:no-underline">
+                        <span className="flex items-center gap-2"><HelpCircle className="w-4 h-4" /> How to Use Repeater</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-4 text-sm text-muted-foreground space-y-2">
+                        <p><strong>Request:</strong> specific HTTP method, URL, Headers, and Body.</p>
+                        <p><strong>Split View:</strong> The left pane is for editing the request, the right pane shows the real-time response.</p>
+                        <p><strong>Common Headers:</strong> <code>Content-Type: application/json</code> is common for APIs. <code>Cookie: sessionid=...</code> for auth.</p>
+                    </AccordionContent>
+                </AccordionItem>
+            </Accordion>
+      </Card>
     </div>
   );
 }
