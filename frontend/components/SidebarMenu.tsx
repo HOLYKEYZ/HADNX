@@ -14,16 +14,20 @@ import {
   ShieldAlert,
   Database,
   Network,
+  ShieldCheck,
+  Radio,
 } from "lucide-react";
 
 const menuItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/history", icon: History, label: "Scan History" },
-  { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater (Tool)" },
+  { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater" },
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
   { href: "/dashboard/tools/nuclei", icon: ShieldAlert, label: "Nuclei Scanner" },
   { href: "/dashboard/tools/sqlmap", icon: Database, label: "SQLMap Exploiter" },
   { href: "/dashboard/tools/nmap", icon: Network, label: "Nmap Scanner" },
+  { href: "/dashboard/tools/zap", icon: ShieldCheck, label: "ZAP Scanner" },
+  { href: "/dashboard/tools/wireshark", icon: Radio, label: "Wireshark" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

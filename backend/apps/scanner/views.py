@@ -21,6 +21,7 @@ from .services.tools.nuclei_service import NucleiService
 from .services.tools.sqlmap_service import SQLMapService
 from .services.tools.nmap_service import NmapService
 from .services.tools.zap_service import ZapService
+from .services.tools.wireshark_service import WiresharkService
 
 from .models import Scan
 from .serializers import (
@@ -450,3 +451,30 @@ class ZapScanView(APIView):
              return Response(ZapService.get_alerts(target))
              
         return Response({'error': 'Invalid action'}, status=400)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class WiresharkView(APIView):
+    """
+    Control Wireshark/Tshark Packet Capture.
+    """
+    def get(self, request):
+        """List available network interfaces."""
+        return Response(WiresharkService.list_interfaces())
+
+    def post(self, request):
+        """Start a packet capture."""
+        interface = request.data.get('interface', 'eth0')
+        duration = int(request.data.get('duration', 10))
+        
+        # Admin-only for raw packet capture
+        if not request.user.is_staff:
+             return Response({'error': 'Admin access required for packet capture'}, status=403)
+             
+        result = WiresharkService.capture(interface, duration)
+        
+        if 'error' in result:
+             status_code = 503 if 'not found' in result.get('error', '').lower() else 500
+             return Response(result, status=status_code)
+             
+        return Response(result)

@@ -287,6 +287,21 @@ export const api = {
     if (!r.ok) throw await r.json();
     return r.json();
   }),
+
+  getWiresharkInterfaces: () => fetchWithAuth("/scans/wireshark/", {
+    method: "GET",
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
+
+  startWiresharkCapture: (interfaceName: string, duration: number = 10) => fetchWithAuth("/scans/wireshark/", {
+    method: "POST",
+    body: JSON.stringify({ interface: interfaceName, duration }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;
