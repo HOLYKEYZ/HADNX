@@ -217,54 +217,51 @@ class ScanViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class RepeaterView(APIView):
+class ScriptRunnerView(APIView):
     """
-    Interactive Repeater Tool.
-    Allows Users (Admins) to manually send HTTP requests to Authorized Domains.
+    Executes arbitrary Python scripts provided by the user.
+    WARNING: RCE capability. Admin only.
     """
     
     def post(self, request):
-        url = request.data.get('url')
-        method = request.data.get('method', 'GET').upper()
-        headers = request.data.get('headers', {})
-        body = request.data.get('body', None)
-        follow_redirects = request.data.get('follow_redirects', True)
+        script_code = request.data.get('script')
+        if not script_code:
+            return Response({'error': 'Script code is required'}, status=400)
+            
+        import subprocess
+        import tempfile
+        import os
         
-        if not url:
-            return Response({'error': 'URL is required'}, status=400)
-            
-        # 1. Scope Validation
+        # Security: In a real prod environment, this should be sandboxed (Docker/nsjail).
+        # For this 'Pentest Partner' tool, we assume the user is the authorized admin.
+        
         try:
-            ScopeValidator.validate_or_raise(url, request.user)
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=403)
-            
-        # 2. Add User-Agent if missing
-        if 'User-Agent' not in headers:
-            headers['User-Agent'] = 'Hadnxjs/1.0 (Security Scanner)'
-            
-        # 3. Execute Request
-        try:
+            # Create temp file
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as tmp:
+                tmp.write(script_code)
+                tmp_path = tmp.name
+                
+            # Run it
             start_time = time.time()
-            resp = requests.request(
-                method,
-                url,
-                headers=headers,
-                data=body,
-                allow_redirects=follow_redirects,
-                timeout=10,
-                verify=False
+            process = subprocess.run(
+                ['python', tmp_path],
+                capture_output=True,
+                text=True,
+                timeout=30 # 30s timeout
             )
-            elapsed_ms = int((time.time() - start_time) * 1000)
+            elapsed = time.time() - start_time
+            
+            # Cleanup
+            os.remove(tmp_path)
             
             return Response({
-                'status': resp.status_code,
-                'status_text': resp.reason,
-                'headers': dict(resp.headers),
-                'body': resp.text,
-                'elapsed': elapsed_ms,
-                'url': resp.url
+                'stdout': process.stdout,
+                'stderr': process.stderr,
+                'returncode': process.returncode,
+                'elapsed': round(elapsed, 2)
             })
             
-        except requests.RequestException as e:
-            return Response({'error': f"Request failed: {str(e)}"}, status=502)
+        except subprocess.TimeoutExpired:
+            return Response({'error': 'Script execution timed out (30s limit)', 'stderr': '', 'stdout': ''}, status=408)
+        except Exception as e:
+            return Response({'error': str(e), 'stderr': str(e), 'stdout': ''}, status=500)

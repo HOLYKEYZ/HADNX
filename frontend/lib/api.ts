@@ -247,6 +247,14 @@ export const api = {
     if (!r.ok) throw await r.json();
     return r.json();
   }),
+
+  runScript: (script: string) => fetchWithAuth("/scans/script-runner/", {
+    method: "POST",
+    body: JSON.stringify({ script }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;
