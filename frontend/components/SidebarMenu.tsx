@@ -9,11 +9,13 @@ import {
   History,
   Settings,
   Plus,
+  Zap,
 } from "lucide-react";
 
 const menuItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/history", icon: History, label: "Scan History" },
+  { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater (Tool)" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
