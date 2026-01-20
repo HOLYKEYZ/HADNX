@@ -121,7 +121,7 @@ export default function RepeaterPage() {
         <Card className="flex flex-col min-h-0 border-border bg-black/40">
             <div className="p-2 border-b border-border bg-muted/20 flex justify-between items-center h-[53px]">
                 <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground ml-2">Response</span>
-                {response && (
+                {response && response.headers && (
                     <div className="flex items-center gap-3 text-xs font-mono mr-2">
                         <span className={`px-2 py-0.5 rounded ${
                             response.status >= 500 ? 'bg-destructive/20 text-destructive' :
@@ -132,7 +132,7 @@ export default function RepeaterPage() {
                             Status: {response.status} {response.status_text}
                         </span>
                         <span className="text-muted-foreground">{response.elapsed}ms</span>
-                        <span className="text-muted-foreground">{response.headers['Content-Length'] || body?.length || 0} bytes</span>
+                        <span className="text-muted-foreground">{response.headers['Content-Length'] || response.body?.length || 0} bytes</span>
                     </div>
                 )}
             </div>
@@ -143,11 +143,13 @@ export default function RepeaterPage() {
                 {response ? (
                     <div className="space-y-4">
                         {/* Response Headers */}
-                        <div className="text-purple-400 border-b border-border pb-2 mb-2">
-                             {Object.entries(response.headers).map(([k, v]) => (
-                                <div key={k}><span className="font-bold text-purple-300">{k}:</span> {String(v)}</div>
-                             ))}
-                        </div>
+                        {response.headers && (
+                            <div className="text-purple-400 border-b border-border pb-2 mb-2">
+                                {Object.entries(response.headers).map(([k, v]) => (
+                                    <div key={k}><span className="font-bold text-purple-300">{k}:</span> {String(v)}</div>
+                                ))}
+                            </div>
+                        )}
                         {/* Response Body */}
                         <div className="text-gray-300 whitespace-pre-wrap break-all">
                             {response.body}
