@@ -217,6 +217,60 @@ class ScanViewSet(viewsets.ModelViewSet):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class RepeaterView(APIView):
+    """
+    Interactive Repeater Tool.
+    Allows Users (Admins) to manually send HTTP requests to Authorized Domains.
+    """
+    
+    def post(self, request):
+        url = request.data.get('url')
+        method = request.data.get('method', 'GET').upper()
+        headers = request.data.get('headers', {})
+        body = request.data.get('body', None)
+        follow_redirects = request.data.get('follow_redirects', True)
+        
+        if not url:
+            return Response({'error': 'URL is required'}, status=400)
+            
+        # 1. Scope Validation
+        try:
+            ScopeValidator.validate_or_raise(url, request.user)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=403)
+            
+        # 2. Add User-Agent if missing
+        if 'User-Agent' not in headers:
+            headers['User-Agent'] = 'Hadnxjs/1.0 (Security Scanner)'
+            
+        # 3. Execute Request
+        try:
+            start_time = time.time()
+            resp = requests.request(
+                method,
+                url,
+                headers=headers,
+                data=body,
+                allow_redirects=follow_redirects,
+                timeout=10,
+                verify=False
+            )
+            elapsed_ms = int((time.time() - start_time) * 1000)
+            
+            return Response({
+                'status': resp.status_code,
+                'status_text': resp.reason,
+                'headers': dict(resp.headers),
+                'body': resp.text,
+                'elapsed': elapsed_ms,
+                'url': resp.url
+            })
+            
+        except requests.RequestException as e:
+            return Response({'error': f"Request failed: {str(e)}"}, status=502)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ScriptRunnerView(APIView):
     """
     Executes arbitrary Python scripts provided by the user.
