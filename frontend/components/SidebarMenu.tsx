@@ -10,12 +10,14 @@ import {
   Settings,
   Plus,
   Zap,
+  Terminal,
 } from "lucide-react";
 
 const menuItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { href: "/dashboard/history", icon: History, label: "Scan History" },
   { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater (Tool)" },
+  { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
