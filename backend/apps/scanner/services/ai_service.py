@@ -120,11 +120,6 @@ class AIService:
         # Start chat session
         chat = model.start_chat(history=formatted_history)
         
-        # Send new message with system instruction prepended effectively
-        # (Gemini Pro doesn't have strict system_instruction arg in `start_chat` in older versions, 
-        # but we can prefix the first message or rely on behavior. 
-        # Ideally we prepend it to the first message if history is empty, but let's just send the prompt.)
-        
         last_message = messages[-1].get('content', '')
         full_prompt = f"{system_instruction}\n\nUser Question: {last_message}"
         
