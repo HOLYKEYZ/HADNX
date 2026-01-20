@@ -12,6 +12,7 @@ import {
   Zap,
   Terminal,
   ShieldAlert,
+  Database,
 } from "lucide-react";
 
 const menuItems = [
@@ -20,6 +21,7 @@ const menuItems = [
   { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater (Tool)" },
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
   { href: "/dashboard/tools/nuclei", icon: ShieldAlert, label: "Nuclei Scanner" },
+  { href: "/dashboard/tools/sqlmap", icon: Database, label: "SQLMap Exploiter" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

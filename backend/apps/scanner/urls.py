@@ -3,7 +3,7 @@ URL routing for scanner app.
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ScanViewSet, RepeaterView, ScriptRunnerView, NucleiScanView
+from .views import ScanViewSet, RepeaterView, ScriptRunnerView, NucleiScanView, SQLMapScanView
 
 router = DefaultRouter()
 router.register(r'', ScanViewSet, basename='scan')
@@ -12,4 +12,5 @@ urlpatterns = [
     path('repeater/', RepeaterView.as_view(), name='repeater'),
     path('script-runner/', ScriptRunnerView.as_view(), name='script-runner'),
     path('nuclei/', NucleiScanView.as_view(), name='nuclei'),
+    path('sqlmap/', SQLMapScanView.as_view(), name='sqlmap'),
 ] + router.urls

@@ -263,6 +263,14 @@ export const api = {
     if (!r.ok) throw await r.json();
     return r.json();
   }),
+
+  runSQLMapScan: (url: string) => fetchWithAuth("/scans/sqlmap/", {
+    method: "POST",
+    body: JSON.stringify({ url }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;

@@ -18,6 +18,7 @@ import requests
 import time
 from .services.exploit.scope_validator import ScopeValidator
 from .services.tools.nuclei_service import NucleiService
+from .services.tools.sqlmap_service import SQLMapService
 
 from .models import Scan
 from .serializers import (
@@ -348,6 +349,36 @@ class NucleiScanView(APIView):
              status_code = 500 if 'Execution Failed' in result.get('error', '') else 400
              if 'Nuclei CLI not found' in result.get('error'):
                  status_code = 503 # Service Unavailable
+             return Response(result, status=status_code)
+             
+        return Response(result)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class SQLMapScanView(APIView):
+    """
+    Runs SQLMap Scan.
+    Requires sqlmap cloned in backend/tools/sqlmap.
+    """
+    def post(self, request):
+        target = request.data.get('url')
+        if not target:
+             return Response({'error': 'Target URL is required'}, status=400)
+             
+        # 1. Scope Validation
+        try:
+             ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+             return Response({'error': str(e)}, status=403)
+             
+        # 2. Run Scan
+        result = SQLMapService.run_scan(target)
+        
+        # 3. Handle Errors
+        if 'error' in result:
+             status_code = 500
+             if 'SQLMap not found' in result.get('error', ''):
+                 status_code = 503
              return Response(result, status=status_code)
              
         return Response(result)
