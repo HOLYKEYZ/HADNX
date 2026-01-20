@@ -11,6 +11,7 @@ import {
   Plus,
   Zap,
   Terminal,
+  ShieldAlert,
 } from "lucide-react";
 
 const menuItems = [
@@ -18,6 +19,7 @@ const menuItems = [
   { href: "/dashboard/history", icon: History, label: "Scan History" },
   { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater (Tool)" },
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
+  { href: "/dashboard/tools/nuclei", icon: ShieldAlert, label: "Nuclei Scanner" },
   { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 

@@ -255,6 +255,14 @@ export const api = {
     if (!r.ok) throw await r.json();
     return r.json();
   }),
+
+  runNucleiScan: (url: string) => fetchWithAuth("/scans/nuclei/", {
+    method: "POST",
+    body: JSON.stringify({ url }),
+  }).then(async r => {
+    if (!r.ok) throw await r.json();
+    return r.json();
+  }),
 };
 
 export default api;

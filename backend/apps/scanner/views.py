@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 import requests
 import time
 from .services.exploit.scope_validator import ScopeValidator
+from .services.tools.nuclei_service import NucleiService
 
 from .models import Scan
 from .serializers import (
@@ -319,3 +320,34 @@ class ScriptRunnerView(APIView):
             return Response({'error': 'Script execution timed out (30s limit)', 'stderr': '', 'stdout': ''}, status=408)
         except Exception as e:
             return Response({'error': str(e), 'stderr': str(e), 'stdout': ''}, status=500)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class NucleiScanView(APIView):
+    """
+    Runs a Nuclei Scan on a target.
+    Requires 'nuclei' binary installed on server.
+    """
+    
+    def post(self, request):
+        target = request.data.get('url')
+        if not target:
+            return Response({'error': 'Target URL is required'}, status=400)
+            
+        # 1. Scope Validation (Strict)
+        try:
+            ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=403)
+            
+        # 2. Run Scan
+        result = NucleiService.run_scan(target)
+        
+        # 3. Handle Errors
+        if 'error' in result:
+             status_code = 500 if 'Execution Failed' in result.get('error', '') else 400
+             if 'Nuclei CLI not found' in result.get('error'):
+                 status_code = 503 # Service Unavailable
+             return Response(result, status=status_code)
+             
+        return Response(result)
