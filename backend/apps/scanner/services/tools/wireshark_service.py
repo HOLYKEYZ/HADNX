@@ -8,10 +8,25 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 class WiresharkService:
+    # Windows default installation path
+    TSHARK_PATH = r"C:\Program Files\Wireshark\tshark.exe"
+    
     @staticmethod
     def is_available():
         """Check if tshark is installed."""
-        return shutil.which("tshark") is not None
+        # First try PATH, then check default install location
+        if shutil.which("tshark"):
+            return True
+        return os.path.exists(WiresharkService.TSHARK_PATH)
+    
+    @staticmethod
+    def get_tshark_cmd():
+        """Returns the tshark command (path or just 'tshark' if in PATH)."""
+        if shutil.which("tshark"):
+            return "tshark"
+        if os.path.exists(WiresharkService.TSHARK_PATH):
+            return WiresharkService.TSHARK_PATH
+        return None
 
     @staticmethod
     def capture(interface: str = "eth0", duration: int = 10, filename: str = None):
@@ -33,7 +48,7 @@ class WiresharkService:
                 filename = os.path.join(temp_dir, f"capture_{os.getpid()}.pcap")
 
             cmd = [
-                "tshark",
+                WiresharkService.get_tshark_cmd(),
                 "-i", interface,
                 "-a", f"duration:{duration}",
                 "-w", filename
@@ -69,8 +84,9 @@ class WiresharkService:
             return {"error": "Tshark not found"}
 
         try:
+            tshark_cmd = WiresharkService.get_tshark_cmd()
             process = subprocess.run(
-                ["tshark", "-D"],
+                [tshark_cmd, "-D"],
                 capture_output=True,
                 text=True,
                 timeout=5
