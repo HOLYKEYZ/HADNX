@@ -18,3 +18,6 @@ daphne>=4.1.0
 xhtml2pdf>=0.2.15
 markdown>=3.5.1
 whois>=1.2024
+google-generativeai>=0.3.0
+python-nmap>=0.7.1
+python-owasp-zap-v2.4>=0.0.25
