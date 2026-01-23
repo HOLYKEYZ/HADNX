@@ -101,6 +101,9 @@ class ScanCreateSerializer(serializers.Serializer):
         return value
 
 
+class ScanStatusSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for polling scan status."""
+    
     class Meta:
         model = Scan
         fields = ['id', 'status', 'overall_score', 'grade', 'error_message']
