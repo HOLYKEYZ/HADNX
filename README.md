@@ -1,38 +1,28 @@
-# Hadnx - Web Security Posture Analysis Platform
-
+Hadnx - Web Security Posture Analysis Platform
 A production-grade, defensive web security auditing platform that analyzes live websites for security headers, cookies, TLS/SSL configuration, and HTTPS enforcement.
 
-## Features
-
-- **HTTP Security Headers Analysis** - Detect missing CSP, HSTS, X-Frame-Options, and more
-- **Cookie Security Audit** - Check Secure, HttpOnly, SameSite flags
-- **TLS/SSL Verification** - Validate protocol versions, cipher strength, certificates
-- **HTTPS Enforcement** - Detect mixed content and redirect issues
-- **Weighted Scoring** - 0-100 score with A+ to F grades
-- **Framework-Specific Fixes** - nginx, Apache, Django, Express remediation guides
-
-## Tech Stack
-
-### Backend
-- Python 3.12 / Django 5 / Django REST Framework
-- Celery + Redis for async scanning
-- BeautifulSoup, requests, httpx, cryptography
-
-### Frontend
-- Next.js 14 (App Router) / TypeScript
-- Tailwind CSS / shadcn/ui
-- Recharts for visualizations
-
-## Quick Start
-
-### Prerequisites
-- Python 3.12+
-- Node.js 18+
-- Redis server
-
-### Backend Setup
-
-```bash
+Features
+HTTP Security Headers Analysis - Detect missing CSP, HSTS, X-Frame-Options, and more
+Cookie Security Audit - Check Secure, HttpOnly, SameSite flags
+TLS/SSL Verification - Validate protocol versions, cipher strength, certificates
+HTTPS Enforcement - Detect mixed content and redirect issues
+Weighted Scoring - 0-100 score with A+ to F grades
+Framework-Specific Fixes - nginx, Apache, Django, Express remediation guides
+Tech Stack
+Backend
+Python 3.12 / Django 5 / Django REST Framework
+Celery + Redis for async scanning
+BeautifulSoup, requests, httpx, cryptography
+Frontend
+Next.js 14 (App Router) / TypeScript
+Tailwind CSS / shadcn/ui
+Recharts for visualizations
+Quick Start
+Prerequisites
+Python 3.12+
+Node.js 18+
+Redis server
+Backend Setup
 cd backend
 
 # Create virtual environment
@@ -54,11 +44,7 @@ celery -A core worker -l info
 
 # Start Django server on port 9001
 python manage.py runserver 9001
-```
-
-### Frontend Setup
-
-```bash
+Frontend Setup
 cd frontend
 
 # Install dependencies
@@ -66,22 +52,15 @@ npm install
 
 # Start development server
 npm run dev
-```
-
 Visit http://localhost:5176 to access the application.
 
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/scans/` | Start new scan |
-| GET | `/api/scans/` | List all scans |
-| GET | `/api/scans/{id}/` | Get scan details |
-| GET | `/api/scans/{id}/status/` | Poll scan status |
-
-## Project Structure
-
-```
+API Endpoints
+Method	Endpoint	Description
+POST	/api/scans/	Start new scan
+GET	/api/scans/	List all scans
+GET	/api/scans/{id}/	Get scan details
+GET	/api/scans/{id}/status/	Poll scan status
+Project Structure
 hadnx/
 ├── backend/                 # Django backend
 │   ├── core/                 # Settings, Celery, URLs
@@ -99,18 +78,14 @@ hadnx/
     ├── components/           # UI components
     ├── lib/                  # API client, utils
     └── package.json
-```
+Security Philosophy
+Hadnx is a defensive security tool:
 
-## Security Philosophy
-
-Hadnx is a **defensive** security tool:
-- ✅ Observes and analyzes
-- ✅ Scores posture
-- ✅ Provides remediation
-- ❌ No exploitation
-- ❌ No brute force
-- ❌ No payloads
-
-## License
-
+✅ Observes and analyzes
+✅ Scores posture
+✅ Provides remediation
+✅ Exploitation
+✅ Brute force
+✅ Payloads
+License
 GNU GENERAL PUBLIC LICENSE Version 3
