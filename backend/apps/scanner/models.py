@@ -100,27 +100,42 @@ class Finding(models.Model):
     severity = models.CharField(max_length=10, choices=Severity.choices)
     category = models.CharField(max_length=20, choices=Category.choices)
     
-    # Impact and recommendations
-    impact = models.TextField()
-    recommendation = models.TextField()
+    # Details & PoC
+    affected_element = models.CharField(max_length=1024, blank=True) # URL param, header name, etc.
+    evidence = models.TextField(blank=True) # Request/Response snippet
+    poc = models.TextField(blank=True) # Proof of Concept exploit code
     
-    # Framework-specific fix examples (JSON: {"nginx": "...", "apache": "...", etc})
-    fix_examples = models.JSONField(default=dict)
+    # Impact & Remediation
+    impact = models.TextField(blank=True)
+    recommendation = models.TextField(blank=True)
+    fix_examples = models.TextField(blank=True) # JSON or Markdown
     
-    # Optional: affected element (e.g., cookie name, header name)
-    affected_element = models.TextField(blank=True) # Changed to TextField to support long recon lists
-    
-    # Phase 2 Fields
-    poc = models.TextField(blank=True, help_text="Proof of Concept command or script")
-    evidence = models.TextField(blank=True, help_text="Raw evidence data (e.g. log output)")
-    confidence = models.CharField(max_length=20, default='HIGH', blank=True)
-    
-    # Scoring weight for this finding
+    # Metrics
+    confidence = models.CharField(max_length=10, default='CERTAIN') # CERTAIN, FIRM, TENTATIVE
     score_impact = models.IntegerField(default=0)
     
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        ordering = ['-severity', '-score_impact']
+        
+    def __str__(self):
+        return f"{self.severity}: {self.issue}"
+
+
+class ChatMessage(models.Model):
+    """
+    Persisted chat history for AI Security Consultant.
+    """
+    scan = models.ForeignKey(Scan, on_delete=models.CASCADE, related_name='chat_messages')
+    role = models.CharField(max_length=10) # 'user' or 'model'
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
+
+
         ordering = ['-severity', 'category']
         indexes = [
             models.Index(fields=['scan', 'category']),

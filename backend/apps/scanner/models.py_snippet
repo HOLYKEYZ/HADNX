@@ -1,0 +1,11 @@
+class ChatMessage(models.Model):
+    """
+    Persisted chat history for AI Security Consultant.
+    """
+    scan = models.ForeignKey(Scan, on_delete=models.CASCADE, related_name='chat_messages')
+    role = models.CharField(max_length=10) # 'user' or 'model'
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['timestamp']
