@@ -28,11 +28,26 @@ export function AIChatDrawer({ scanId, isOpen, onClose, initialMessage }: AIChat
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
+  // Load history on open
+  useEffect(() => {
+    if (isOpen) {
+        setIsLoading(true);
+        api.getChatHistory(scanId)
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    setMessages(data);
+                }
+            })
+            .catch(err => console.error("Failed to load chat history", err))
+            .finally(() => setIsLoading(false));
+    }
+  }, [isOpen, scanId]);
+
   // Handle initial prompt from "Ask AI" buttons
   useEffect(() => {
     if (isOpen && initialMessage) {
         setInput(initialMessage);
-        // Optional: auto-send
+        // Optional: auto-send could go here if undesired behavior isn't triggered
     }
   }, [isOpen, initialMessage]);
 
@@ -51,13 +66,12 @@ export function AIChatDrawer({ scanId, isOpen, onClose, initialMessage }: AIChat
     setIsLoading(true);
 
     try {
-      // Send entire history for context
-      const history = [...messages, userMsg];
-      const response = await api.chatWithAI(scanId, history);
+      const response = await api.sendMessageToAI(scanId, userMsg.content);
       
       if (response.error) {
         setMessages(prev => [...prev, { role: "model", content: `❌ Error: ${response.error}` }]);
       } else {
+        // We get back the simplified response object { content: "...", role: "model" }
         setMessages(prev => [...prev, { role: "model", content: response.content }]);
       }
     } catch (e) {

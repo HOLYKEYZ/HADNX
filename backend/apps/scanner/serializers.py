@@ -2,7 +2,7 @@
 DRF serializers for scanner app.
 """
 from rest_framework import serializers
-from .models import Scan, Finding
+from .models import Scan, Finding, ChatMessage
 
 
 class FindingSerializer(serializers.ModelSerializer):
@@ -101,10 +101,13 @@ class ScanCreateSerializer(serializers.Serializer):
         return value
 
 
-class ScanStatusSerializer(serializers.ModelSerializer):
-    """Lightweight serializer for polling scan status."""
-    
     class Meta:
         model = Scan
         fields = ['id', 'status', 'overall_score', 'grade', 'error_message']
         read_only_fields = fields
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['role', 'content', 'timestamp']

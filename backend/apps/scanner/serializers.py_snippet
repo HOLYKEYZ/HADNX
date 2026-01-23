@@ -1,0 +1,4 @@
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['role', 'content', 'timestamp']

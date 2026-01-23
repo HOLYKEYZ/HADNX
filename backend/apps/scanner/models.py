@@ -136,11 +136,3 @@ class ChatMessage(models.Model):
         ordering = ['timestamp']
 
 
-        ordering = ['-severity', 'category']
-        indexes = [
-            models.Index(fields=['scan', 'category']),
-            models.Index(fields=['severity']),
-        ]
-    
-    def __str__(self):
-        return f"{self.severity}: {self.issue}"

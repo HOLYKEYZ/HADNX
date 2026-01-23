@@ -23,10 +23,11 @@ from .services.tools.nmap_service import NmapService
 from .services.tools.zap_service import ZapService
 from .services.tools.wireshark_service import WiresharkService
 
-from .models import Scan
+from .models import Scan, ChatMessage
 from .serializers import (
     ScanListSerializer, ScanDetailSerializer,
-    ScanCreateSerializer, ScanStatusSerializer
+    ScanCreateSerializer, ScanStatusSerializer,
+    ChatMessageSerializer
 )
 from .tasks import run_security_scan
 
@@ -153,14 +154,27 @@ class ScanViewSet(viewsets.ModelViewSet):
         serializer = ScanStatusSerializer(scan)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['get', 'post'])
     def chat(self, request, pk=None):
         """
         Chat with AI about the scan.
-        Body: { messages: [...] }
+        GET: Retrieve chat history.
+        POST: Send message and get response.
         """
         scan = self.get_object()
-        messages = request.data.get('messages', [])
+        
+        if request.method == 'GET':
+            # return history
+            messages = scan.chat_messages.all()
+            return Response(ChatMessageSerializer(messages, many=True).data)
+            
+        # POST
+        user_message = request.data.get('message')
+        if not user_message:
+            return Response({'error': 'Message required'}, status=400)
+            
+        # Save User Message
+        ChatMessage.objects.create(scan=scan, role='user', content=user_message)
         
         # Build context from scan summary
         context = f"""
@@ -171,8 +185,36 @@ class ScanViewSet(viewsets.ModelViewSet):
         High: {scan.findings.filter(severity='HIGH').count()}
         """
         
-        response = AIService.chat(messages, context=context)
-        return Response(response)
+        # Load History for AI Context
+        # We limit to last 10 turns to fit context window if needed, but Gemini has large context.
+        # Format: [{'role': 'user'|'model', 'content': '...'}] (Schema for AI Service might differ slightly)
+        # AI Service expects: [{'role': 'user', 'content': '...'}, ...]
+        # Our model: role='user'/'model'. AI service maps 'model'->'model'.
+        
+        # We need to construct the history list.
+        # AI Service chat() takes a list of messages.
+        # We should pass the *entire* history including the new one, OR just the new one if we use a persistent session object in AI service?
+        # AIService.chat currently takes `messages` list and starts a new chat session each time.
+        # So we fetch all history from DB.
+        
+        db_history = scan.chat_messages.all() 
+        history_for_ai = [
+            {'role': msg.role, 'content': msg.content} 
+            for msg in db_history
+        ]
+        
+        # Call AI
+        response_data = AIService.chat(history_for_ai, context=context)
+        
+        if 'error' in response_data:
+             return Response(response_data, status=500)
+             
+        ai_content = response_data['content']
+        
+        # Save AI Response
+        ChatMessage.objects.create(scan=scan, role='model', content=ai_content)
+        
+        return Response({'content': ai_content, 'role': 'model'})
 
     @action(detail=True, methods=['post'])
     def analyze_finding(self, request, pk=None):

@@ -220,9 +220,11 @@ export const api = {
   }),
 
   // AI & Chat
-  chatWithAI: (scanId: string, messages: any[]) => fetchWithAuth(`/scans/${scanId}/chat/`, {
+  getChatHistory: (scanId: string) => fetchWithAuth(`/scans/${scanId}/chat/`, { method: "GET" }).then(r => r.json()),
+
+  sendMessageToAI: (scanId: string, message: string) => fetchWithAuth(`/scans/${scanId}/chat/`, {
     method: "POST",
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ message }),
   }).then(async r => {
     if (!r.ok) throw await r.json();
     return r.json();
