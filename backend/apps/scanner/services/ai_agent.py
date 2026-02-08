@@ -27,11 +27,16 @@ class AIPentestAgent:
     """
     Agentic AI that interprets security findings.
     Uses Groq (primary) -> Gemini (fallback) -> Simulation (final fallback)
+    Now uses KeyManager for centralized key access.
     """
     
     def __init__(self):
-        self.groq_key = os.environ.get('GROQ_KEY')
-        self.gemini_key = os.environ.get('GEMINI_KEY')
+        from .key_manager import KeyManager
+        
+        # Get pentest keys via KeyManager (returns tuple: key, provider)
+        # For this legacy agent, we get specific keys directly
+        self.groq_key = os.environ.get('GROQ_KEY')  # Pentest key 2
+        self.gemini_key = os.environ.get('GEMINI_KEY')  # Pentest key 1
         
         # Debug logging
         if self.groq_key:
