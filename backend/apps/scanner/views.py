@@ -520,3 +520,83 @@ class WiresharkView(APIView):
              return Response(result, status=status_code)
              
         return Response(result)
+
+
+from .services.shannon import ShannonAgent
+from .services.dos import DoSAttacker
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ShannonViewSet(viewsets.ViewSet):
+    """
+    API for Shannon AI Pentester.
+    """
+    
+    @action(detail=False, methods=['post'])
+    def audit(self, request):
+        """
+        Start an autonomous audit on a target.
+        """
+        target = request.data.get('target')
+        context = request.data.get('context', {})
+        
+        if not target:
+            return Response({'error': 'Target is required'}, status=400)
+            
+        # Scope validation
+        try:
+             ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+             return Response({'error': str(e)}, status=403)
+
+        agent = ShannonAgent()
+        result = agent.audit_target(target, context)
+        
+        if isinstance(result, dict) and 'error' in result:
+             return Response(result, status=500)
+        
+        return Response({'result': result})
+
+    @action(detail=False, methods=['post'])
+    def exploit(self, request):
+        """
+        Generate a PoC exploit.
+        """
+        vuln_details = request.data.get('vulnerability')
+        if not vuln_details:
+             return Response({'error': 'Vulnerability details required'}, status=400)
+             
+        agent = ShannonAgent()
+        exploit_code = agent.exploit_vulnerability(vuln_details)
+        
+        return Response({'exploit_code': exploit_code})
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class DoSViewSet(viewsets.ViewSet):
+    """
+    API for DoS Simulator.
+    """
+    attacker = DoSAttacker() 
+    
+    @action(detail=False, methods=['post'])
+    def start(self, request):
+        target = request.data.get('target')
+        method = request.data.get('method', 'HTTP')
+        intensity = request.data.get('intensity', 'medium')
+        duration = int(request.data.get('duration', 60))
+        
+        if not target:
+             return Response({'error': 'Target required'}, status=400)
+             
+        try:
+             ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+             return Response({'error': str(e)}, status=403)
+             
+        result = self.attacker.start_attack(target, method, intensity, duration)
+        return Response(result)
+
+    @action(detail=False, methods=['post'])
+    def stop(self, request):
+        self.attacker.stop_attack()
+        return Response({'status': 'stopped'})

@@ -16,13 +16,17 @@ import {
   Network,
   ShieldCheck,
   Radio,
+  Bot,
+  Activity,
 } from "lucide-react";
 
 const menuItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+  { href: "/dashboard/shannon", icon: Bot, label: "Shannon AI" }, // New
   { href: "/dashboard/history", icon: History, label: "Scan History" },
   { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater" },
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },
+  { href: "/dashboard/tools/dos", icon: Activity, label: "DoS Simulator" }, // New
   { href: "/dashboard/tools/nuclei", icon: ShieldAlert, label: "Nuclei Scanner" },
   { href: "/dashboard/tools/sqlmap", icon: Database, label: "SQLMap Exploiter" },
   { href: "/dashboard/tools/nmap", icon: Network, label: "Nmap Scanner" },

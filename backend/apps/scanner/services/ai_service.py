@@ -15,9 +15,11 @@ class AIService:
         if cls._model:
             return cls._model
 
-        api_key = os.getenv('GEMINI_API_KEY') or getattr(settings, 'GEMINI_API_KEY', None)
+        from .key_manager import KeyManager
+        api_key = KeyManager.get_consulting_key()
+        
         if not api_key:
-            logger.warning("GEMINI_API_KEY not found in environment.")
+            logger.warning("Consulting/Gemini API Key not found.")
             return None
 
         # Configure Gemini
