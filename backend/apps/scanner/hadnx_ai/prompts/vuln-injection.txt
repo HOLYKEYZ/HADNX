@@ -1,0 +1,110 @@
+# Injection Vulnerability Analysis (SQLi & Command Injection)
+
+## Objective
+Systematically analyze all input vectors for SQL injection and command injection vulnerabilities using source-to-sink tracing.
+
+## Methodology
+
+### Slot Type Classification
+
+| Slot Type | Description | Defense Required |
+|-----------|-------------|-----------------|
+| val | Data value in SQL | Parameterized binding |
+| ident | Table/column identifier | Whitelist validation |
+| keyword | SQL keywords (ORDER, LIMIT) | Strict whitelist |
+| shell_arg | Command line argument | Allowlist or escape |
+| shell_cmd | Command string | Never allow user input |
+
+### Sanitization Confidence Levels
+
+- **High:** Binds on value/like/numeric; strict casts; whitelists for all syntax slots; no post-sanitization concat
+- **Medium:** Binds present but upstream transforms unclear; partial whitelists
+- **Low:** Any concat into syntax slots; regex-only sanitization; generic escaping where binds required
+
+## Systematic Analysis Process
+
+For each source input:
+1. Trace flow through application to database/shell sink
+2. Create distinct Data Flow Path record for each unique route
+3. Document all hops, transformations, sanitizers, concatenations
+4. Label sink's input slot type (val, ident, shell_arg, etc.)
+5. Compare sanitizers on path with sink's slot context
+6. If sanitization appropriate AND no post-sanitization concat → SAFE
+7. If mismatch, absent, or nullified by concat → VULNERABLE
+
+## Proof Obligations
+
+What counts as proof:
+- Documented path from source → sanitization(s) → sink with slot type
+- Clear sanitizer-to-context mismatch or missing defense
+- Any concatenation after sanitization (file:line recorded)
+- Potential witness_payload for exploit phase
+
+## Witness Payloads (Hold for Exploit Phase)
+
+### SQL Injection
+- Error shape: `'` `"` `)` `;` `\`
+- Boolean: `... AND 1=1` vs `... AND 1=2`
+- Timing: `... AND SLEEP(5)`
+- UNION: `... UNION SELECT NULL ...`
+- Comments: `--` `#` `/**/`
+
+### Command Injection
+- `; ls -la`
+- `| whoami`
+- `` `id` ``
+- `$(cat /etc/passwd)`
+- `& dir`
+- `|| uname -a`
+
+### Path Traversal / LFI
+- `../../../../etc/passwd`
+- `....//....//etc/passwd`
+- `..%252f..%252fetc/passwd`
+- `/etc/passwd%00`
+
+### Template Injection (SSTI)
+- `{{7*7}}`
+- `${7*7}`
+- `<%= 7*7 %>`
+- `{{config.items()}}`
+
+## False Positives to Avoid
+
+**General:**
+- Treating early sanitization as sufficient when later concatenation reintroduces taint
+- Confusing 400 validation errors with backend execution errors
+- Mistaking WAF blocking for proof of flaw
+
+**SQLi-Specific:**
+- Assuming parameter binds protect SQL identifiers or keywords
+- Relying on regex/escaping for value slots where binding required
+
+**Command Injection-Specific:**
+- Assuming blacklist of special characters is secure
+- Failing to differentiate shell=False vs shell=True
+
+## Findings Record Format
+
+```
+source:
+combined_sources:
+path:
+sink_call:
+slot_type:
+sanitization_observed:
+concat_occurrences:
+verdict:
+mismatch_reason:
+witness_payload:
+confidence:
+notes:
+```
+
+## Injection Analysis Report Structure
+
+### 1. Executive Summary
+### 2. Dominant Vulnerability Patterns
+### 3. Strategic Intelligence for Exploitation
+### 4. Vectors Analyzed and Confirmed Secure
+### 5. Analysis Constraints and Blind Spots

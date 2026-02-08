@@ -1,0 +1,111 @@
+# SSRF Vulnerability Analysis
+
+## Objective
+Identify Server-Side Request Forgery vulnerabilities through backward taint analysis from HTTP client sinks.
+
+## Analysis Methodology
+
+### 1) Identify HTTP Client Usage Patterns
+Find all locations where application makes outbound HTTP requests:
+- fetch(), axios, requests, urllib
+- HTTP client libraries
+- URL fetchers and webhook handlers
+- External API integrations
+
+### 2) Protocol and Scheme Validation
+For each HTTP sink, check:
+- Is protocol restricted to http/https only?
+- Are dangerous protocols blocked? (file://, gopher://, dict://)
+- Is scheme validation performed before request?
+
+### 3) Hostname and IP Address Validation
+Check for:
+- DNS rebinding protections
+- Blocklist for internal IPs (127.0.0.1, 10.x, 172.16-31.x, 192.168.x)
+- Cloud metadata endpoint blocks (169.254.169.254)
+- Localhost bypass variations
+
+### 4) Port Restriction and Service Access Controls
+Verify:
+- Port restrictions in place
+- Non-standard ports blocked
+- Service-specific access controls
+
+### 5) URL Parsing and Validation Bypass Techniques
+Test for:
+- URL parsing inconsistencies
+- Unicode normalization bypasses
+- URL encoding variations
+- IP address representations (decimal, octal, hex)
+
+### 6) Request Modification and Headers
+Check if attacker can control:
+- Request headers
+- Request body
+- HTTP method
+
+### 7) Response Handling and Information Disclosure
+Analyze:
+- Is response body returned to user?
+- Are error messages revealing internal info?
+- Can response be used for port scanning?
+
+## Backward Taint Analysis for SSRF
+
+### Step 1: Create Task for Each SSRF Sink
+Document each HTTP client usage with:
+- Location (file:line)
+- URL construction method
+- User input influence
+
+### Step 2: Trace Backward
+For each sink, trace URL parameter backwards:
+- Identify source of URL components
+- Document any validation/sanitization
+- Note transformations that could bypass controls
+
+### Step 3: Verdict Classification
+
+| Verdict | Criteria |
+|---------|----------|
+| VULNERABLE | User controls URL with insufficient validation |
+| SAFE | Proper blocklist + allowlist validation |
+| PARTIAL | Some controls but bypass possible |
+
+### Step 4: Documentation
+
+For each finding, record:
+```
+sink_location: File:line of HTTP call
+url_source: Where URL comes from
+user_controlled_parts: Which components user controls
+validation_present: Yes/No + description
+bypass_techniques: Applicable bypasses
+confidence: HIGH/MEDIUM/LOW
+witness_payload: Example SSRF URL
+```
+
+## SSRF Witness Payloads (Hold for Exploit)
+
+### Cloud Metadata
+- `http://169.254.169.254/latest/meta-data/`
+- `http://metadata.google.internal/`
+- `http://100.100.100.200/latest/meta-data/`
+
+### Internal Services
+- `http://localhost:22/`
+- `http://127.0.0.1:6379/` (Redis)
+- `http://[::1]:8080/`
+
+### Bypass Techniques
+- `http://127.1/` (shortened IP)
+- `http://0x7f000001/` (hex IP)
+- `http://2130706433/` (decimal IP)
+- `http://localtest.me/` (DNS to 127.0.0.1)
+
+## SSRF Analysis Report Structure
+
+### 1. Executive Summary
+### 2. Dominant Vulnerability Patterns
+### 3. Strategic Intelligence for Exploitation
+### 4. Secure by Design: Validated Components

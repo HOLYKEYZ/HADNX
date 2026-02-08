@@ -22,7 +22,7 @@ import {
 
 const menuItems = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/dashboard/shannon", icon: Bot, label: "Shannon AI" }, // New
+  { href: "/dashboard/ai-pentester", icon: Bot, label: "AI Pentester" },
   { href: "/dashboard/history", icon: History, label: "Scan History" },
   { href: "/dashboard/tools/repeater", icon: Zap, label: "Repeater" },
   { href: "/dashboard/tools/script-runner", icon: Terminal, label: "Script Runner" },

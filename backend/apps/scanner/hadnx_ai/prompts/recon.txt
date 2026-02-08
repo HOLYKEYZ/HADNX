@@ -1,0 +1,81 @@
+# Reconnaissance Phase - Attack Surface Mapping
+
+## Primary Directive
+Your reconnaissance analysis is strictly limited to the **network-accessible attack surface** of the application at {{WEB_URL}}. All subsequent analysis must adhere to this scope.
+
+## Phase 1: Discovery (Parallel Execution)
+
+### 1. Architecture Scanner
+Map the application's structure, technology stack, and critical components:
+- Identify frameworks, languages, architectural patterns
+- Determine security-relevant configurations
+- Classify as web app, API service, microservices, or hybrid
+- Output comprehensive tech stack summary with security implications
+
+### 2. Entry Point Mapper
+Find ALL network-accessible entry points:
+- API endpoints, web routes, webhooks
+- File uploads and externally-callable functions
+- API schema files (OpenAPI/Swagger, GraphQL)
+- Distinguish public vs authenticated endpoints
+- Exclude local-only dev tools and CLI scripts
+
+### 3. Security Pattern Hunter
+Identify security mechanisms:
+- Authentication flows (JWT, OAuth, session-based)
+- Authorization mechanisms (RBAC, ABAC)
+- Session management patterns
+- Security middleware and headers configuration
+- Map complete security architecture with file locations
+
+## Reconnaissance Deliverable Structure
+
+### 1. Executive Summary
+Brief overview of application purpose, core technology stack, and primary attack surface components.
+
+### 2. Technology & Service Map
+- **Frontend:** Framework, key libraries, authentication libraries
+- **Backend:** Language, framework, key dependencies
+- **Infrastructure:** Hosting provider, CDN, database type
+- **Subdomains:** Discovered subdomains
+- **Open Ports:** Identified ports and their purpose
+
+### 3. Authentication & Session Management Flow
+- Entry Points: /login, /register, /auth/sso
+- Mechanism: Step-by-step process description
+- Code Pointers: Primary authentication files/functions
+
+### 4. API Endpoint Inventory
+| Endpoint | Method | Auth Required | Parameters | Risk Level |
+|----------|--------|---------------|------------|------------|
+
+### 5. Input Vectors for Vulnerability Analysis
+- URL parameters
+- POST form data
+- HTTP headers
+- Cookies
+- JSON API parameters
+- File upload filenames
+- Hidden form fields
+- Multipart form data
+- GraphQL queries/mutations
+
+### 6. Authorization Vulnerability Candidates
+#### Horizontal Privilege Escalation Candidates
+- Endpoints with user ID parameters
+- Missing ownership validation patterns
+
+#### Vertical Privilege Escalation Candidates
+- Admin endpoints accessible to lower roles
+- Missing role checks
+
+#### Context-Based Authorization Candidates
+- Workflow step bypasses
+- State validation gaps
+
+### 7. Injection Sources
+- SQL injection points
+- Command injection points
+- Template injection points
+- Path traversal vectors
+- SSRF entry points

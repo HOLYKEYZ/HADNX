@@ -1,0 +1,104 @@
+# Authentication Vulnerability Analysis (AuthN)
+
+## Objective
+Analyze authentication mechanisms for weaknesses that could allow unauthorized access.
+
+## Analysis Checklist
+
+### 1) Transport & Caching
+For all auth endpoints:
+- [ ] Enforce HTTPS (no HTTP fallbacks)
+- [ ] Verify HSTS at the edge
+- [ ] Check `Cache-Control: no-store` / `Pragma: no-cache`
+
+**If failed → classify:** `transport_exposure`
+**Suggested attack:** credential/session theft
+
+### 2) Rate Limiting / CAPTCHA / Monitoring
+For login, signup, reset, token endpoints:
+- [ ] Verify per-IP and/or per-account rate limits
+- [ ] Confirm lockout/backoff or CAPTCHA on failures
+- [ ] Check monitoring for failed-login spikes
+
+**If failed → classify:** `abuse_defenses_missing`
+**Suggested attack:** brute_force_login, credential_stuffing, password_spraying
+
+### 3) Session Management (Cookies)
+For all session cookies:
+- [ ] Check `HttpOnly` and `Secure` flags
+- [ ] Appropriate `SameSite` (Lax/Strict)
+- [ ] Session ID rotated after login
+- [ ] Logout invalidates server-side session
+- [ ] Idle and absolute timeout configured
+- [ ] Session IDs not in URLs
+
+**If failed → classify:** `session_cookie_misconfig`
+**Suggested attack:** session_hijacking, session_fixation, token_replay
+
+### 4) Token/Session Properties
+For custom tokens:
+- [ ] Cryptographic randomness (no sequential/guessable IDs)
+- [ ] Only sent over HTTPS, never logged
+- [ ] Explicit expiration (TTL)
+- [ ] Invalidated on logout
+
+**If failed → classify:** `token_management_issue`
+**Suggested attack:** token_replay, offline_guessing
+
+### 5) Session Fixation
+For login flow:
+- [ ] Compare pre-login vs post-login session IDs
+- [ ] New ID generated on auth success
+
+**If failed → classify:** `login_flow_logic`
+**Suggested attack:** session_fixation
+
+### 6) Password & Account Policy
+- [ ] No default credentials in code/fixtures
+- [ ] Strong password policy enforced server-side
+- [ ] Passwords safely stored (one-way hashing)
+- [ ] MFA available/enforced where required
+
+**If failed → classify:** `weak_credentials`
+**Suggested attack:** credential_stuffing, password_spraying
+
+### 7) Login/Signup Responses
+- [ ] Error messages are generic (no user-enumeration)
+- [ ] Auth state not reflected in abusable URLs
+
+**If failed → classify:** `login_flow_logic`
+**Suggested attack:** account_enumeration, open_redirect_chain
+
+### 8) Recovery & Logout
+For password reset/recovery:
+- [ ] Single-use, short-TTL tokens
+- [ ] Rate-limited attempts
+- [ ] No user enumeration in responses
+- [ ] Logout: server-side invalidation + client cookie clearing
+
+**If failed → classify:** `reset_recovery_flaw`
+**Suggested attack:** reset_token_guessing, account_takeover
+
+### 9) SSO/OAuth (if applicable)
+- [ ] Validate `state` (CSRF) and `nonce` (replay)
+- [ ] Exact redirect URI allowlists (no wildcards)
+- [ ] Verify token signature and pin algorithms
+- [ ] Validate `iss`, `aud`, `exp` claims
+- [ ] PKCE for public clients
+- [ ] **nOAuth check:** Use `sub` claim, NOT mutable attributes like `email`
+
+**If failed → classify:** `login_flow_logic` or `token_management_issue`
+**Suggested attack:** oauth_code_interception, token_replay, noauth_attribute_hijack
+
+## Confidence Scoring
+
+- **HIGH:** Clear code evidence of missing control
+- **MEDIUM:** Control appears present but implementation uncertain
+- **LOW:** Suspicious pattern but cannot confirm without testing
+
+## Authentication Analysis Report Structure
+
+### 1. Executive Summary
+### 2. Dominant Vulnerability Patterns
+### 3. Strategic Intelligence for Exploitation
+### 4. Secure by Design: Validated Components

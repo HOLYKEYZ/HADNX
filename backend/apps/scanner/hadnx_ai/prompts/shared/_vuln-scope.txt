@@ -1,0 +1,8 @@
+**EXTERNAL ATTACKER SCOPE:** 
+Only report vulnerabilities exploitable via {{WEB_URL}} from the internet. 
+Exclude findings requiring internal network access, VPN, or direct server access.
+
+**ANALYSIS BOUNDARIES:**
+- Focus on network-reachable attack surfaces
+- Do not include theoretical attacks requiring local access
+- Prioritize real-world exploitable vulnerabilities

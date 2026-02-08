@@ -1,0 +1,103 @@
+# Authorization Vulnerability Analysis (AuthZ)
+
+## Objective
+Identify horizontal, vertical, and context-based authorization vulnerabilities through backward tracing from endpoints to guards.
+
+## Analysis Categories
+
+### 1) Horizontal Authorization Analysis
+**Goal:** Find endpoints where users can access other users' resources.
+
+**Process:**
+1. Start at identified endpoint
+2. Trace backwards through code
+3. Find either a **sufficient guard** OR a **side effect** reached without guard
+
+**Side Effects (unauthorized):**
+- Database read/write of user/org objects
+- File or config changes
+- State updates altering access for another subject
+- Cross-tenant data access or modification
+- Shared resource leakage between tenants
+- Metadata exposure across tenant boundaries
+
+**Sufficient Guard Criteria (horizontal):**
+- Enforces session authentication
+- Binds identifier → current user/org (ownership check)
+- Validates tenant/organization membership
+- Database queries include proper user/tenant filtering
+- Prevents manipulation of user/tenant identifiers
+- Maintains isolation for shared services
+- Runs before any side effect
+- Dominates all code paths
+
+### 2) Vertical Authorization Analysis
+**Goal:** Find endpoints where lower-privileged users can access admin functions.
+
+**Process:**
+1. Start at identified admin/privileged endpoint
+2. Trace backwards to find role/capability guard
+
+**Privileged Side Effects:**
+- User or role management
+- System configuration changes
+- Database export/import/backup
+- Cross-user or global state changes
+
+**Sufficient Guard Criteria (vertical):**
+- Explicit check for required role/capability
+- Executed before any side effect
+- Dominates all code paths
+- Uses correct guard (not wrong/missing include)
+
+### 3) Context / Workflow Authorization Analysis
+**Goal:** Find workflow step bypasses.
+
+**Process:**
+1. Start at endpoint representing a workflow step
+2. Walk forward through intended flow
+3. Check each step validates prior state
+
+**Workflow Side Effects:**
+- Payment capture
+- Confirmation/finalization
+- Account deletion/approval
+- Installation/setup
+
+**Sufficient Guard Criteria (context):**
+- Each step enforces prior state (status flags, stage tokens, nonces)
+- Guard runs before applying state change
+
+## Proof Obligations
+
+- **Guarded:** Guard dominates the sink (before side effect)
+- **Vulnerable:** Side effect reached without sufficient guard
+- Guards after side effect do not count
+- UI-only checks (hidden links/buttons) do not count as guards
+
+## Exploitation Queue Preparation
+
+For each vulnerable endpoint, record:
+```
+endpoint: [METHOD] /path
+role(s): Roles that can trigger
+guard_evidence: Missing/misplaced
+side_effect: Observed unauthorized action
+reason: 1-2 line explanation
+confidence: HIGH/MEDIUM/LOW
+minimal_witness: Sketch for exploit agent
+```
+
+## Confidence Scoring
+
+- **HIGH:** Clear evidence of missing guard before side effect
+- **MEDIUM:** Guard exists but bypass path unclear
+- **LOW:** Suspicious but cannot confirm without testing
+
+## Authorization Analysis Report Structure
+
+### 1. Executive Summary
+### 2. Dominant Vulnerability Patterns
+### 3. Strategic Intelligence for Exploitation
+### 4. Vectors Analyzed and Confirmed Secure
+### 5. Analysis Constraints and Blind Spots

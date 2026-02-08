@@ -522,19 +522,20 @@ class WiresharkView(APIView):
         return Response(result)
 
 
-from .services.shannon import ShannonAgent
+from .hadnx_ai import HADNXAgent
 from .services.dos import DoSAttacker
 
 @method_decorator(csrf_exempt, name='dispatch')
-class ShannonViewSet(viewsets.ViewSet):
+class HADNXPentesterViewSet(viewsets.ViewSet):
     """
-    API for Shannon AI Pentester.
+    API for HADNX AI Pentester - Autonomous Security Testing.
     """
     
     @action(detail=False, methods=['post'])
     def audit(self, request):
         """
-        Start an autonomous audit on a target.
+        Start a full autonomous security audit on a target.
+        Pipeline: Recon → Vulnerability Analysis → Exploitation → Report
         """
         target = request.data.get('target')
         context = request.data.get('context', {})
@@ -548,8 +549,8 @@ class ShannonViewSet(viewsets.ViewSet):
         except PermissionError as e:
              return Response({'error': str(e)}, status=403)
 
-        agent = ShannonAgent()
-        result = agent.audit_target(target, context)
+        agent = HADNXAgent()
+        result = agent.audit(target, context)
         
         if isinstance(result, dict) and 'error' in result:
              return Response(result, status=500)
@@ -557,18 +558,48 @@ class ShannonViewSet(viewsets.ViewSet):
         return Response({'result': result})
 
     @action(detail=False, methods=['post'])
+    def quick_scan(self, request):
+        """
+        Run a quick vulnerability scan (no exploitation phase).
+        """
+        target = request.data.get('target')
+        vuln_types = request.data.get('vuln_types', None)  # ['xss', 'injection', 'auth', 'authz', 'ssrf']
+        
+        if not target:
+            return Response({'error': 'Target is required'}, status=400)
+            
+        try:
+             ScopeValidator.validate_or_raise(target, request.user)
+        except PermissionError as e:
+             return Response({'error': str(e)}, status=403)
+
+        agent = HADNXAgent()
+        result = agent.quick_scan(target, vuln_types)
+        
+        return Response({'result': result})
+
+    @action(detail=False, methods=['post'])
     def exploit(self, request):
         """
-        Generate a PoC exploit.
+        Attempt to exploit a specific finding.
         """
-        vuln_details = request.data.get('vulnerability')
-        if not vuln_details:
-             return Response({'error': 'Vulnerability details required'}, status=400)
-             
-        agent = ShannonAgent()
-        exploit_code = agent.exploit_vulnerability(vuln_details)
+        target = request.data.get('target')
+        finding_id = request.data.get('finding_id')
         
-        return Response({'exploit_code': exploit_code})
+        if not target or not finding_id:
+             return Response({'error': 'Target and finding_id are required'}, status=400)
+             
+        agent = HADNXAgent()
+        result = agent.exploit(target, finding_id)
+        
+        return Response({'result': result})
+
+    @action(detail=False, methods=['get'])
+    def health(self, request):
+        """
+        Check if the AI Pentester is properly configured.
+        """
+        return Response(HADNXAgent.health_check())
 
 
 @method_decorator(csrf_exempt, name='dispatch')

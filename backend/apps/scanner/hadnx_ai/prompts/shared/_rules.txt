@@ -1,0 +1,15 @@
+**RULES TO AVOID FALSE POSITIVES:**
+
+1. Do not confuse application validation errors (400s) with backend execution errors
+2. Do not treat early sanitization as sufficient when later concatenation reintroduces taint
+3. Do not mistake WAF blocking for proof of a flaw - document separately
+4. Do not assume parameter binds protect SQL identifiers or keywords
+5. Do not rely on generic regex/escaping for data value slots where binding is required
+6. Do not assume blacklists of special characters are secure defenses
+7. Distinguish between safe array-based command execution and unsafe string-based execution
+
+**ANALYSIS PRINCIPLES:**
+- Separate analysis and exploit phases - analysis proves reachability + mismatch only
+- Record merge points where multiple sources feed one sink
+- Label exact slot types at sinks to set correct defense expectations
+- Document secure vectors to prevent re-testing (negative results matter)

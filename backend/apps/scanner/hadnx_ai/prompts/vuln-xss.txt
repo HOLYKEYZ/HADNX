@@ -1,0 +1,89 @@
+# XSS Vulnerability Analysis - Backward Taint Analysis
+
+## Objective
+Identify vulnerable data flow paths by starting at XSS sinks and tracing backward to their sanitizations and sources.
+
+**Core Principle:** Data is assumed tainted until a context-appropriate output encoder is encountered.
+
+## Comprehensive XSS Vulnerability Analysis (Sink-to-Source)
+
+### 1) Identify XSS Sinks
+For each sink context pair, create a task:
+- HTML Body sinks (innerHTML, document.write)
+- HTML Attribute sinks
+- JavaScript String sinks
+- URL Parameter sinks
+- CSS Value sinks
+
+### 2) Trace Each Sink Backward (Backward Taint Analysis)
+For each pending sink, trace the origin of data backward through application logic.
+
+**Early Termination for Secure Paths:**
+- Check if sanitization function matches sink's specific render context
+- Check if any string concatenations occurred between sanitizer and sink
+- If correct match AND no intermediate mutations → SAFE, stop tracing
+
+**Path Forking:** If variable can be populated from multiple code paths, trace every path independently.
+
+**Track Mutations:** Note concatenations or mutations that can invalidate encoding.
+
+### 3) Database Read Checkpoint (Stored XSS)
+If backward trace reaches a database read without a valid sanitizer:
+- Assume data from database is untrusted
+- Vulnerability exists - no output encoding between DB read and render sink
+- Document: DB read operation, file:line location, data field accessed
+
+### 4) Identify Ultimate Source & Classify
+
+| Classification | Source Termination |
+|----------------|-------------------|
+| Stored XSS | Terminates at Database Read Checkpoint |
+| Reflected XSS | Terminates at URL parameter, form body, or header |
+| DOM-based XSS | Entire path in client-side code (location.hash → innerHTML) |
+
+### 5) Encoding Context Rules
+
+| Sink Context | Required Encoding |
+|--------------|------------------|
+| HTML_BODY | HTML Entity Encoding (< → &lt;) |
+| HTML_ATTRIBUTE | Attribute Encoding |
+| JAVASCRIPT_STRING | JavaScript String Escaping (' → \\') |
+| URL_PARAM | URL Encoding |
+| CSS_VALUE | CSS Hex Encoding |
+
+**Mismatch = Vulnerable:** Path is vulnerable if trace completes without matching encoder.
+
+### 6) Document Finding
+
+For each finding, record:
+- `source`: Origin of tainted data
+- `path`: Full trace from source to sink
+- `sink_call`: Final render location
+- `sink_context`: HTML_BODY, HTML_ATTRIBUTE, etc.
+- `sanitization_observed`: Found sanitizers (if any)
+- `verdict`: VULNERABLE or SAFE
+- `confidence`: HIGH, MEDIUM, LOW
+- `witness_payload`: Example exploit payload
+
+### 7) Confidence Scoring
+
+- **HIGH:** Clear source→sink trace, correct context labeling, explicit mismatch
+- **MEDIUM:** Likely mismatch but some uncertainty remains
+- **LOW:** Suspicious patterns without complete path confirmation
+
+## XSS Analysis Report Structure
+
+### 1. Executive Summary
+Brief overview of XSS findings and overall risk.
+
+### 2. Dominant Vulnerability Patterns
+Describe the main categories of XSS found.
+
+### 3. Strategic Intelligence for Exploitation
+Context-specific attack vectors and bypass techniques.
+
+### 4. Vectors Analyzed and Confirmed Secure
+Document paths that were traced and found safe.
+
+### 5. Exploitation Queue
+List of confirmed vulnerabilities ready for exploitation phase.
