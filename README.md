@@ -11,6 +11,8 @@ A production-grade, hybrid offensive/defensive web security platform that analyz
   - **HTTPS Enforcement** - Detect mixed content and redirect issues
 
 - **⚔️ Offensive Tools (Interactive Suite)**
+  - **Shannon AI Pentester** - Autonomous AI agent for recon, exploit generation, and attack simulation
+  - **DoS/DDoS Simulator** - HTTP Flood and Slowloris stress testing
   - **Nuclei Scanner** - Fast template-based vulnerability scanning
   - **OWASP ZAP** - Full web application scanner (Spider & Active Scan)
   - **SQLMap** - Automated SQL injection detection and exploitation
@@ -98,6 +100,10 @@ Visit [http://localhost:5176](http://localhost:5176) to access the application.
 | GET | `/api/scans/` | List all scans |
 | GET | `/api/scans/{id}/` | Get scan details |
 | POST | `/api/scans/{id}/chat/` | Chat with AI Consultant |
+| POST | `/api/scans/shannon/audit/` | Run Shannon AI Pentest |
+| POST | `/api/scans/shannon/exploit/` | Generate PoC Exploit |
+| POST | `/api/scans/dos/start/` | Start DoS Simulation |
+| POST | `/api/scans/dos/stop/` | Stop DoS Simulation |
 | POST | `/api/scans/zap/` | Control OWASP ZAP |
 | POST | `/api/scans/nmap/` | Run Network Scan |
 
