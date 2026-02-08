@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Disable Turbopack (requires native SWC binaries)
+  turbopack: {
+    enabled: false,
+  },
   // Align with Django's APPEND_SLASH behavior
   trailingSlash: true,
   // Enable standalone output for Docker deployments
