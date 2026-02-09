@@ -52,8 +52,13 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
-        await Promise.all([fetchConfig(), fetchUser()]);
-        setLoading(false);
+        try {
+            await Promise.allSettled([fetchConfig(), fetchUser()]);
+        } catch (error) {
+            console.warn("Init error (non-critical):", error);
+        } finally {
+            setLoading(false);
+        }
     };
     init();
   }, []);
