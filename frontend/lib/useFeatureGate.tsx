@@ -83,28 +83,40 @@ export function FeatureGateProvider({ children }: { children: ReactNode }) {
   };
 
   const fetchUser = async () => {
-      try {
       let API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9001/api";
       if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
         API_URL = "http://localhost:9001/api";
       }
-      const res = await fetch(`${API_URL}/auth/me/`, { credentials: "include" });
-          if (res.ok) {
-              const userData = await res.json();
-              // Check if we got actual user data (has username) vs empty object
-              if (userData && userData.username) {
-                  console.log("FeatureGate: User loaded", userData.username, "Is Staff:", userData.is_staff);
-                  setUser(userData);
-              } else {
-                  console.log("FeatureGate: Not authenticated (empty response)");
-                  setUser(null);
-              }
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
+        const res = await fetch(`${API_URL}/auth/me/`, { 
+          credentials: "include",
+          signal: controller.signal 
+        });
+        clearTimeout(timeoutId);
+        
+        if (res.ok) {
+            const userData = await res.json();
+            if (userData && userData.username) {
+                console.log("FeatureGate: User loaded", userData.username, "Is Staff:", userData.is_staff);
+                setUser(userData);
+            } else {
+                console.log("FeatureGate: Not authenticated (empty response)");
+                setUser(null);
+            }
+        } else {
+            console.warn("FeatureGate: Failed to fetch user", res.status);
+            setUser(null);
+        }
+      } catch (e: any) {
+          if (e.name === 'AbortError') {
+              console.warn("FeatureGate: User fetch timed out");
           } else {
-              console.warn("FeatureGate: Failed to fetch user", res.status);
-              setUser(null);
+              console.warn("FeatureGate: Backend unreachable, continuing without auth");
           }
-      } catch (e) {
-          console.error("FeatureGate: Error fetching user", e);
           setUser(null);
       }
   };
