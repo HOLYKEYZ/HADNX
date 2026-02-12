@@ -1,56 +1,60 @@
 # Hadnx - Web Security Posture Analysis Platform
 
-A production-grade, hybrid offensive/defensive web security platform that analyzes live websites for vulnerabilities, security headers, and compliance, while providing interactive pentesting tools.
+A production-grade, hybrid offensive/defensive web security platform that analyzes live websites for vulnerabilities, security headers, and compliance, while providing interactive pentesting tools and an autonomous AI security agent.
 
 ## Features
 
-- **🛡️ Defensive Analysis**
-  - **HTTP Security Headers** - Detect missing CSP, HSTS, X-Frame-Options
-  - **Cookie Security Audit** - Check Secure, HttpOnly, SameSite flags
-  - **TLS/SSL Verification** - Validate protocol versions, cipher strength
-  - **HTTPS Enforcement** - Detect mixed content and redirect issues
+### 🛡️ Defensive Analysis & Compliance
+- **HTTP Security Headers** - Detect missing CSP, HSTS, X-Frame-Options, etc.
+- **Cookie Security Audit** - Check Secure, HttpOnly, SameSite flags, and cookie longevity.
+- **TLS/SSL Verification** - Validate protocol versions, cipher strength, and certificate validity.
+- **WAF Detection** - identify Cloudflare, AWS WAF, Akamai, and other protection layers.
+- **Malware & Phishing Check** - Check domain reputation and content for malicious snippets.
+- **Weighted Scoring** - 0-100 score with A+ to F grades based on findings.
+- **Compliance Reports** - Mapping to OWASP Top 10, NIST, and ISO 27001 standards.
 
-- **⚔️ Offensive Tools (Interactive Suite)**
-  - **Shannon AI Pentester** - Autonomous AI agent for recon, exploit generation, and attack simulation
-  - **DoS/DDoS Simulator** - HTTP Flood and Slowloris stress testing
-  - **Nuclei Scanner** - Fast template-based vulnerability scanning
-  - **OWASP ZAP** - Full web application scanner (Spider & Active Scan)
-  - **SQLMap** - Automated SQL injection detection and exploitation
-  - **Nmap** - Network port scanning and service detection
-  - **Repeater** - Manual request crafting and replay
-  - **Wireshark** - Packet capture and analysis via Tshark
+### 🔍 Reconnaissance & OSINT
+- **Subdomain Enumeration** - Passive (CRT.sh) and Active (DNS Bruteforce) discovery.
+- **Cloud Resource Discovery** - Scan for open S3 buckets, Azure Blobs, and Google Storage.
+- **Threat Intelligence** - Integration with AlienVault OTX and PulseDive for reputation checks.
+- **Directory Bruteforce** - Customizable wordlist-based path discovery.
 
-- **🧠 AI Security Consultant**
-  - **Gemini Integration** - Explain findings, generate PoCs, and suggest fixes
-  - **Chat Interface** - Context-aware security consultations
-  - **Persistence** - Chat history saved per scan
+### ⚔️ Offensive Tools (Interactive Suite)
+- **Shannon AI Pentester** - Autonomous AI agent (HADNX Agent) for recon, vulnerability analysis, and exploit generation.
+- **DoS/DDoS Simulator** - Stress test targets using HTTP Flood and Slowloris (Authorized use only).
+- **Nuclei Scanner** - Powerful template-based vulnerability scanning.
+- **OWASP ZAP** - Full-featured web scanner for Spidering and Active Scanning.
+- **SQLMap** - Automated tool for SQL injection detection and database takeover.
+- **Nmap** - Industry-standard port scanning and service fingerprinting.
+- **Repeater** - Manually craft, modify, and replay HTTP requests.
+- **Wireshark (Tshark)** - Real-time packet capture and interface analysis.
 
-- **📊 Reporting & Compliance**
-  - **Weighted Scoring** - 0-100 score with A+ to F grades
-  - **Compliance Reports** - OWASP Top 10, NIST, ISO 27001
-  - **PDF Export** - Professional audit reports
+### 🧠 AI Security Consultant (Gemini)
+- **Context-Aware Analysis** - Get expert explanations for any finding.
+- **Interactive Chat** - Persisted chat history per scan for continuous consultation.
+- **Remediation & PoCs** - Generate fix recommendations and Proof-of-Concept verification steps.
 
 ## Tech Stack
 
 ### Backend
-- Python 3.12 / Django 5 / Django REST Framework
-- Celery + Redis for async scanning
-- PostgreSQL (Production) / SQLite (Dev)
-- **Tools:** `python-nmap`, `python-owasp-zap-v2.4`, `sqlmap`, `nuclei`, `tshark`
+- **Core:** Python 3.12 / Django 5 / Django REST Framework
+- **Concurrency:** Celery + Redis for asynchronous scanning tasks
+- **Database:** PostgreSQL (Production) / SQLite (Development)
+- **Key Libraries:** `google-generativeai`, `python-nmap`, `python-owasp-zap-v2.4`, `sqlmap`, `nuclei`, `tshark`, `reportlab`
 
 ### Frontend
-- Next.js 14 (App Router) / TypeScript
-- Tailwind CSS / shadcn/ui
-- Recharts for visualizations
-- `react-markdown` for AI responses
+- **Framework:** Next.js 14 (App Router) / TypeScript
+- **Styling:** Tailwind CSS / shadcn/ui
+- **Visualization:** Recharts & Framer Motion
+- **Features:** Real-time progress tracking, Markdown rendering, Inter font family
 
 ## Quick Start
 
 ### Prerequisites
-- Python 3.12+
-- Node.js 18+
-- Redis server
-- **External Tools:** Nmap, Wireshark (Tshark), OWASP ZAP (Installed locally)
+- **Python 3.12+**
+- **Node.js 18+**
+- **Redis server**
+- **External Dependencies:** Ensure `nmap`, `tshark` (Wireshark), `nuclei`, and `sqlmap` are in your PATH or installed in the default locations.
 
 ### Backend Setup
 
@@ -68,13 +72,10 @@ pip install -r requirements.txt
 # Run migrations
 python manage.py migrate
 
-# Start Redis (in separate terminal)
-# redis-server
-
-# Start Celery worker (in separate terminal)
+# Start Celery worker (requires Redis)
 celery -A core worker -l info -P eventlet
 
-# Start Django server on port 9001
+# Start Django server
 python manage.py runserver 9001
 ```
 
@@ -92,20 +93,19 @@ npm run dev
 
 Visit [http://localhost:5176](http://localhost:5176) to access the application.
 
-## API Endpoints
+## API Endpoints (Core)
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/scans/` | Start new scan |
-| GET | `/api/scans/` | List all scans |
-| GET | `/api/scans/{id}/` | Get scan details |
-| POST | `/api/scans/{id}/chat/` | Chat with AI Consultant |
-| POST | `/api/scans/shannon/audit/` | Run Shannon AI Pentest |
-| POST | `/api/scans/shannon/exploit/` | Generate PoC Exploit |
-| POST | `/api/scans/dos/start/` | Start DoS Simulation |
-| POST | `/api/scans/dos/stop/` | Stop DoS Simulation |
-| POST | `/api/scans/zap/` | Control OWASP ZAP |
-| POST | `/api/scans/nmap/` | Run Network Scan |
+| POST | `/api/scans/` | Initiate a standard security scan |
+| GET | `/api/scans/{id}/status/` | Poll for scan progress and status |
+| GET | `/api/scans/{id}/chat/` | Retrieve AI chat history for a scan |
+| POST | `/api/scans/{id}/chat/` | Send a new message to the AI Consultant |
+| POST | `/api/ai-pentest/audit/` | Run autonomous HADNX AI Pentest Pipeline |
+| POST | `/api/ai-pentest/exploit/` | Generate & verify exploit for a finding |
+| POST | `/api/dos/start/` | Begin DoS simulation on target |
+| POST | `/api/repeater/` | Send a manual HTTP request (Repeater) |
+| POST | `/api/wireshark/` | Start a packet capture session |
 
 ## Project Structure
 
@@ -114,28 +114,28 @@ hadnx/
 ├── backend/                 # Django backend
 │   ├── core/                 # Settings, Celery, URLs
 │   ├── apps/
-│   │   ├── scanner/          # Scan logic & Tool Services
-│   │   │   ├── services/     # Analyzers, AI, ZAP, Nmap, etc.
-│   │   │   ├── models.py
-│   │   │   ├── views.py
-│   │   │   └── tasks.py
-│   │   └── reports/          # Compliance mapping
+│   │   ├── scanner/          # Scan logic, Models, Views
+│   │   │   ├── hadnx_ai/     # Agentic Pentesting Pipeline
+│   │   │   ├── services/     # Individual tool & analyzer services
+│   │   │   ├── tasks.py      # Background task orchestration
+│   │   │   └── hadnx_ai/     # Agentic Pentesting Pipeline
+│   │   └── reports/          # Compliance mapping & PDF generation
 │   └── requirements.txt
 │
 └── frontend/                 # Next.js frontend
-    ├── app/                  # App Router pages
-    ├── components/           # UI components
-    ├── lib/                  # API client, utils
+    ├── app/                  # App Router components & pages
+    ├── components/           # UI elements (Dashboard, Charts, Chat)
+    ├── lib/                  # API client & shared utilities
     └── package.json
 ```
 
 ## Security Philosophy
 
-Hadnx has evolved into a balanced **Purple Team** platform:
+Hadnx operates on a **Purple Team** philosophy:
 
-- ✅ **Defensive:** Observes, analyzes, scores posture, and provides remediation.
-- ✅ **Offensive:** Verification-focused exploitation to prove impact (with user consent).
-- ✅ **Authorized Use Only:** Strict scope validation to prevent misuse.
+1. **Observability First:** We provide clear visibility into security posture through deep analysis.
+2. **Verification through Impact:** We enable controlled exploitation to prove that vulnerabilities are real and require immediate attention.
+3. **Guardrails & Scope:** Strict domain validation and user authorization ensure that tools are used only on authorized targets.
 
 ## License
 
