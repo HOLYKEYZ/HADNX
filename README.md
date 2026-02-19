@@ -56,6 +56,94 @@ A production-grade, hybrid offensive/defensive web security platform that analyz
 - **Redis server**
 - **External Dependencies:** Ensure `nmap`, `tshark` (Wireshark), `nuclei`, and `sqlmap` are in your PATH or installed in the default locations.
 
+## CLI Usage
+
+Hadnx provides a powerful CLI for running security scans directly from the terminal.
+
+### Install CLI
+
+```bash
+# From project root
+pip install -e .
+
+# Or install dependencies manually
+pip install click requests cryptography beautifulsoup4 dnspython
+```
+
+### Quick CLI Commands
+
+```bash
+# Show help
+hadnx --help
+
+# Run full security scan
+hadnx scan https://example.com
+
+# Scan with verbose output and save report
+hadnx scan https://example.com -V -o report.json
+
+# Analyze HTTP headers only
+hadnx headers https://example.com
+
+# Analyze cookie security
+hadnx cookies https://example.com
+
+# Analyze TLS/SSL configuration
+hadnx tls https://example.com
+
+# Enumerate subdomains
+hadnx subdomains example.com
+
+# Detect WAF
+hadnx wafdetect https://example.com
+
+# Check threat intelligence
+hadnx threat example.com
+
+# Discover cloud resources (S3, Azure, GCS)
+hadnx cloud example.com
+
+# Directory bruteforce
+hadnx brute https://example.com -w wordlist.txt
+
+# Check malware reputation
+hadnx malware example.com
+
+# Start web server
+hadnx serve --host 0.0.0.0 --port 9001
+```
+
+### CLI Options
+
+| Command | Description |
+|---------|-------------|
+| `scan` | Full security scan (headers, cookies, TLS, WAF) |
+| `headers` | HTTP security header analysis |
+| `cookies` | Cookie security audit |
+| `tls` | TLS/SSL configuration check |
+| `subdomains` | Subdomain enumeration |
+| `cloud` | Cloud resource discovery |
+| `wafdetect` | WAF detection |
+| `threat` | Threat intelligence lookup |
+| `brute` | Directory bruteforce |
+| `malware` | Malware/phishing check |
+| `serve` | Start web server |
+
+### Scan Options
+
+```bash
+# Disable specific checks
+hadnx scan https://example.com --no-headers --no-tls
+
+# Verbose mode with detailed findings
+hadnx scan https://example.com -V
+
+# Output to JSON file
+hadnx scan https://example.com -o report.json
+```
+
+## Web Interface Setup
+
 ### Backend Setup
 
 ```bash
@@ -111,6 +199,12 @@ Visit [http://localhost:5176](http://localhost:5176) to access the application.
 
 ```
 hadnx/
+├── hadn/                    # CLI package
+│   ├── __init__.py
+│   ├── __main__.py
+│   └── cli.py               # CLI entry point
+├── pyproject.toml           # Package configuration
+│
 ├── backend/                 # Django backend
 │   ├── core/                 # Settings, Celery, URLs
 │   ├── apps/

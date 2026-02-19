@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hadnx"
+version = "1.0.0"
+description = "Web Security Posture Analysis Platform - CLI Tool"
+readme = "README.md"
+license = {text = "GPL-3.0"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Hadnx Security Team"}
+]
+keywords = ["security", "pentesting", "vulnerability", "scanner", "cli"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: System Administrators",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+
+dependencies = [
+    "click>=8.0.0",
+    "requests>=2.31.0",
+    "cryptography>=41.0",
+    "beautifulsoup4>=4.12",
+    "dnspython>=2.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+hadnx = "hadnx.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/hadnx/hadnx"
+Documentation = "https://github.com/hadnx/hadnx#readme"
+Repository = "https://github.com/hadnx/hadnx"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hadnx*"]
+
+[tool.setuptools.package-data]
+hadnx = ["py.typed"]
