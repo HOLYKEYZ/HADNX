@@ -76,6 +76,10 @@ pip install click requests cryptography beautifulsoup4 dnspython
 # Show help
 hadnx --help
 
+# ═══════════════════════════════════════════════════════════════
+# DEFENSIVE SCANNING
+# ═══════════════════════════════════════════════════════════════
+
 # Run full security scan
 hadnx scan https://example.com
 
@@ -91,29 +95,115 @@ hadnx cookies https://example.com
 # Analyze TLS/SSL configuration
 hadnx tls https://example.com
 
+# ═══════════════════════════════════════════════════════════════
+# RECONNAISSANCE & OSINT
+# ═══════════════════════════════════════════════════════════════
+
 # Enumerate subdomains
 hadnx subdomains example.com
-
-# Detect WAF
-hadnx wafdetect https://example.com
-
-# Check threat intelligence
-hadnx threat example.com
 
 # Discover cloud resources (S3, Azure, GCS)
 hadnx cloud example.com
 
+# Check threat intelligence
+hadnx threat example.com
+
 # Directory bruteforce
 hadnx brute https://example.com -w wordlist.txt
+
+# Detect WAF
+hadnx wafdetect https://example.com
 
 # Check malware reputation
 hadnx malware example.com
 
-# Start web server
+# ═══════════════════════════════════════════════════════════════
+# AI PENTESTER (Autonomous)
+# ═══════════════════════════════════════════════════════════════
+
+# Run full AI pentest audit
+hadnx ai audit https://example.com
+
+# Quick AI scan (no exploitation)
+hadnx ai audit https://example.com --quick
+
+# Save AI audit report
+hadnx ai audit https://example.com -o ai-report.json
+
+# Check AI agent health/configuration
+hadnx ai health
+
+# ═══════════════════════════════════════════════════════════════
+# EXTERNAL TOOLS
+# ═══════════════════════════════════════════════════════════════
+
+# Nuclei vulnerability scanner
+hadnx tools nuclei https://example.com
+
+# Nmap port scanner
+hadnx tools nmap 192.168.1.1 -p 1-1000
+
+# Nmap with custom args
+hadnx tools nmap target.com -p 80,443,8080 -a "-sV -sC"
+
+# SQLMap SQL injection scanner
+hadnx tools sqlmap https://example.com/page?id=1
+
+# OWASP ZAP scanner
+hadnx tools zap https://example.com --type spider
+hadnx tools zap https://example.com --type active
+hadnx tools zap https://example.com --type alerts
+
+# Wireshark/Tshark packet capture
+hadnx tools capture -i eth0 -d 30 -o capture.pcap
+
+# ═══════════════════════════════════════════════════════════════
+# EXPLOITATION MODULES (Requires Authorization)
+# ═══════════════════════════════════════════════════════════════
+
+# XSS exploitation
+hadnx exploit xss https://example.com --deep
+
+# SQL injection exploitation
+hadnx exploit sqli https://example.com/page?id=1
+
+# Command injection
+hadnx exploit cmdi https://example.com/cmd?input=test
+
+# Local File Inclusion
+hadnx exploit lfi https://example.com/page?file=test
+
+# SSRF exploitation
+hadnx exploit ssrf https://example.com/fetch?url=test
+
+# Authentication bypass testing
+hadnx exploit auth https://example.com/login
+
+# File upload exploitation
+hadnx exploit upload https://example.com/upload
+
+# ═══════════════════════════════════════════════════════════════
+# DoS SIMULATION (AUTHORIZED USE ONLY)
+# ═══════════════════════════════════════════════════════════════
+
+# HTTP Flood (low intensity, 30s)
+hadnx dos https://example.com --confirm
+
+# Slowloris attack
+hadnx dos https://example.com -m SLOWLORIS -i medium -d 60 --confirm
+
+# ═══════════════════════════════════════════════════════════════
+# WEB SERVER
+# ═══════════════════════════════════════════════════════════════
+
+# Start backend server
 hadnx serve --host 0.0.0.0 --port 9001
+
+# Start backend + frontend
+hadnx serve --frontend
 ```
 
-### CLI Options
+### CLI Command Reference
 
 | Command | Description |
 |---------|-------------|
@@ -127,6 +217,21 @@ hadnx serve --host 0.0.0.0 --port 9001
 | `threat` | Threat intelligence lookup |
 | `brute` | Directory bruteforce |
 | `malware` | Malware/phishing check |
+| `ai audit` | Autonomous AI pentest audit |
+| `ai health` | Check AI agent configuration |
+| `tools nuclei` | Nuclei vulnerability scanner |
+| `tools nmap` | Nmap port scanner |
+| `tools sqlmap` | SQLMap SQL injection scanner |
+| `tools zap` | OWASP ZAP scanner |
+| `tools capture` | Wireshark/Tshark capture |
+| `exploit xss` | XSS exploitation module |
+| `exploit sqli` | SQL injection exploitation |
+| `exploit cmdi` | Command injection exploitation |
+| `exploit lfi` | Local File Inclusion exploitation |
+| `exploit ssrf` | SSRF exploitation |
+| `exploit auth` | Authentication bypass testing |
+| `exploit upload` | File upload exploitation |
+| `dos` | DoS/DDoS simulation |
 | `serve` | Start web server |
 
 ### Scan Options

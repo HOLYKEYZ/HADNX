@@ -26,6 +26,23 @@ try:
     from apps.scanner.services.threat_intel import ThreatIntelScanner
     from apps.scanner.services.malware_check import MalwareChecker
     from apps.scanner.services.directory_brute import DirectoryBruteForcer
+    from apps.scanner.services.dos import DoSAttacker
+    
+    from apps.scanner.services.tools.nuclei_service import NucleiService
+    from apps.scanner.services.tools.nmap_service import NmapService
+    from apps.scanner.services.tools.sqlmap_service import SQLMapService
+    from apps.scanner.services.tools.zap_service import ZapService
+    from apps.scanner.services.tools.wireshark_service import WiresharkService
+    
+    from apps.scanner.services.exploit.xss_exploiter import AdvancedXSSExploiter, run_xss_exploitation
+    from apps.scanner.services.exploit.sqli_exploiter import SQLiExploiter
+    from apps.scanner.services.exploit.command_injection import CommandInjectionExploiter
+    from apps.scanner.services.exploit.lfi_exploiter import LFIExploiter
+    from apps.scanner.services.exploit.ssrf_exploiter import SSRFExploiter
+    from apps.scanner.services.exploit.auth_bypass import AuthBypassTester
+    from apps.scanner.services.exploit.file_upload import FileUploadExploiter
+    
+    from apps.scanner.hadnx_ai.agent import HADNXAgent
 except ImportError as e:
     print(f"Error importing modules: {e}")
     print("Make sure you're running from the project root directory.")
@@ -487,6 +504,489 @@ def serve(host, port, frontend):
         subprocess.Popen(["npm", "run", "dev"], cwd=frontend_dir, shell=True)
     
     os.system(backend_cmd)
+
+
+@main.group()
+def ai():
+    """AI-powered security testing commands."""
+    pass
+
+
+@ai.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save report to file')
+@click.option('--quick', is_flag=True, help='Quick scan (no exploitation)')
+def audit(url, output, quick):
+    """Run autonomous AI pentest audit on target."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Running AI Pentest Audit: {url}", fg="cyan", bold=True))
+    click.echo(click.style("    This may take a few minutes...", fg="yellow"))
+    
+    agent = HADNXAgent()
+    
+    if quick:
+        result = agent.quick_scan(url)
+    else:
+        result = agent.audit(url)
+    
+    if result.get('error'):
+        click.echo(click.style(f"\n[!] Error: {result['error']}", fg="red"))
+        return
+    
+    findings = result.get('findings', [])
+    
+    click.echo(f"\n  {click.style('AI Audit Complete', fg='green', bold=True)}")
+    click.echo(f"  Target: {result.get('target', url)}")
+    click.echo(f"  Findings: {len(findings)}")
+    
+    if findings:
+        click.echo(click.style("\n[+] Vulnerabilities Found:", fg="cyan"))
+        for f in findings:
+            sev = f.get('severity', 'INFO').upper()
+            title = f.get('title', f.get('type', 'Unknown'))
+            click.echo(f"  {format_severity(sev)} {title}")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(result, f, indent=2, default=str)
+        click.echo(click.style(f"\n[+] Report saved to: {output}", fg="green"))
+
+
+@ai.command()
+def health():
+    """Check AI agent health and configuration."""
+    print_banner()
+    
+    click.echo(click.style("\n[+] Checking AI Agent Health...", fg="cyan"))
+    
+    health = HADNXAgent.health_check()
+    
+    status = "HEALTHY" if health.get('healthy') else "UNHEALTHY"
+    color = "green" if health.get('healthy') else "red"
+    
+    click.echo(f"\n  Status: {click.style(status, fg=color, bold=True)}")
+    click.echo(f"  Prompts Available: {health.get('prompts_available', False)}")
+    click.echo(f"  Prompts Count: {health.get('prompts_count', 0)}")
+    click.echo(f"  Gemini API Key: {'Set' if health.get('gemini_key') else 'Not Set'}")
+    click.echo(f"  Groq API Key: {'Set' if health.get('groq_key') else 'Not Set'}")
+
+
+@main.group()
+def tools():
+    """External security tool integrations."""
+    pass
+
+
+@tools.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def nuclei(url, output):
+    """Run Nuclei vulnerability scanner."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Running Nuclei scan: {url}", fg="cyan", bold=True))
+    
+    if not NucleiService.is_available():
+        click.echo(click.style("[!] Nuclei not found. Install with:", fg="red"))
+        click.echo("    go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest")
+        return
+    
+    result = NucleiService.run_scan(url)
+    
+    if result.get('error'):
+        click.echo(click.style(f"[!] Error: {result['error']}", fg="red"))
+        return
+    
+    findings = result.get('findings', [])
+    click.echo(f"\n  {click.style(str(result.get('count', 0)), fg='green')} findings\n")
+    
+    for f in findings[:20]:
+        sev = f.get('info', {}).get('severity', 'unknown').upper()
+        name = f.get('info', {}).get('name', 'Unknown')
+        click.echo(f"  {format_severity(sev)} {name}")
+    
+    if len(findings) > 20:
+        click.echo(f"  ... and {len(findings) - 20} more")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(result, f, indent=2)
+        click.echo(click.style(f"\n[+] Results saved to: {output}", fg="green"))
+
+
+@tools.command()
+@click.argument('target')
+@click.option('--ports', '-p', default='1-1000', help='Port range (e.g., 1-1000 or 80,443,8080)')
+@click.option('--args', '-a', default='-sV -T4', help='Nmap arguments')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def nmap(target, ports, args, output):
+    """Run Nmap port scanner."""
+    print_banner()
+    
+    click.echo(click.style(f"\n[+] Running Nmap scan: {target}", fg="cyan", bold=True))
+    click.echo(f"    Ports: {ports}")
+    
+    if not NmapService.is_available():
+        click.echo(click.style("[!] Nmap not found. Install from: https://nmap.org/download.html", fg="red"))
+        return
+    
+    result = NmapService.run_scan(target, ports=ports, arguments=args)
+    
+    if result.get('error'):
+        click.echo(click.style(f"[!] Error: {result['error']}", fg="red"))
+        return
+    
+    for host in result.get('results', []):
+        click.echo(f"\n  Host: {click.style(host['host'], fg='green')} ({host['state']})")
+        for proto in host.get('protocols', []):
+            click.echo(f"  Protocol: {proto['protocol']}")
+            for port in proto.get('ports', []):
+                state_color = "green" if port['state'] == 'open' else "yellow"
+                click.echo(f"    {click.style(str(port['port']), fg=state_color)} {port['state']} {port['name']} {port.get('product', '')} {port.get('version', '')}")
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(result, f, indent=2)
+        click.echo(click.style(f"\n[+] Results saved to: {output}", fg="green"))
+
+
+@tools.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def sqlmap(url, output):
+    """Run SQLMap SQL injection scanner."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Running SQLMap scan: {url}", fg="cyan", bold=True))
+    click.echo(click.style("    This may take several minutes...", fg="yellow"))
+    
+    result = SQLMapService.run_scan(url)
+    
+    if result.get('error'):
+        click.echo(click.style(f"[!] Error: {result['error']}", fg="red"))
+        return
+    
+    if result.get('vulnerable'):
+        click.echo(click.style("\n[!] SQL INJECTION VULNERABILITY DETECTED!", fg="red", bold=True))
+    else:
+        click.echo(click.style("\n[-] No SQL injection found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(result, f, indent=2)
+        click.echo(click.style(f"\n[+] Results saved to: {output}", fg="green"))
+
+
+@tools.command()
+@click.argument('url')
+@click.option('--type', '-t', type=click.Choice(['spider', 'active', 'alerts']), default='spider', help='Scan type')
+def zap(url, type):
+    """Run OWASP ZAP scanner."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    conn = ZapService.check_connection()
+    if not conn.get('connected'):
+        click.echo(click.style("[!] Cannot connect to ZAP. Make sure ZAP is running on port 8080", fg="red"))
+        return
+    
+    click.echo(click.style(f"\n[+] ZAP {type} scan: {url}", fg="cyan", bold=True))
+    click.echo(f"    ZAP Version: {conn.get('version')}")
+    
+    if type == 'spider':
+        result = ZapService.spider_scan(url)
+    elif type == 'active':
+        result = ZapService.active_scan(url)
+    else:
+        result = ZapService.get_alerts(url)
+        alerts = result.get('alerts', [])
+        click.echo(f"\n  {click.style(str(len(alerts)), fg='green')} alerts\n")
+        for alert in alerts[:20]:
+            sev = alert.get('risk', 'info').upper()
+            click.echo(f"  {format_severity(sev)} {alert.get('name', 'Unknown')}")
+        return
+    
+    if result.get('error'):
+        click.echo(click.style(f"[!] Error: {result['error']}", fg="red"))
+    else:
+        click.echo(click.style(f"\n[+] Scan started: {result.get('scan_id')}", fg="green"))
+
+
+@tools.command()
+@click.option('--interface', '-i', default='eth0', help='Network interface')
+@click.option('--duration', '-d', default=10, help='Capture duration in seconds')
+@click.option('--output', '-o', type=click.Path(), help='Output pcap file')
+def capture(interface, duration, output):
+    """Capture network packets with Wireshark/Tshark."""
+    print_banner()
+    
+    click.echo(click.style(f"\n[+] Starting packet capture", fg="cyan", bold=True))
+    
+    interfaces = WiresharkService.list_interfaces()
+    if interfaces.get('interfaces'):
+        click.echo("\n  Available interfaces:")
+        for iface in interfaces['interfaces']:
+            click.echo(f"    {iface['id']}: {iface['name']}")
+    
+    if not WiresharkService.is_available():
+        click.echo(click.style("[!] Tshark not found. Install Wireshark.", fg="red"))
+        return
+    
+    click.echo(f"\n  Capturing on {interface} for {duration}s...")
+    
+    result = WiresharkService.capture(interface=interface, duration=duration, filename=output)
+    
+    if result.get('error'):
+        click.echo(click.style(f"[!] Error: {result['error']}", fg="red"))
+    else:
+        click.echo(click.style(f"\n[+] Capture saved to: {result['file']}", fg="green"))
+
+
+@main.group()
+def exploit():
+    """Exploitation modules (requires authorization)."""
+    pass
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--deep', is_flag=True, help='Deep scan including forms')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def xss(url, deep, output):
+    """Test for XSS vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing XSS vulnerabilities: {url}", fg="cyan", bold=True))
+    
+    findings = run_xss_exploitation(url, deep=deep)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} XSS vulnerabilities found!", fg="red", bold=True))
+        for f in findings:
+            click.echo(f"\n  {format_severity(f.get('severity', 'HIGH'))} {f.get('issue')}")
+            click.echo(f"    Parameter: {f.get('affected_element')}")
+            click.echo(f"    Technique: {f.get('description', '')[:100]}")
+    else:
+        click.echo(click.style("\n[-] No XSS vulnerabilities found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def sqli(url, output):
+    """Test for SQL injection vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing SQL injection: {url}", fg="cyan", bold=True))
+    
+    exploiter = SQLiExploiter()
+    findings = exploiter.exploit(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} SQL injection vulnerabilities found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No SQL injection found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def cmdi(url, output):
+    """Test for command injection vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing command injection: {url}", fg="cyan", bold=True))
+    
+    exploiter = CommandInjectionExploiter()
+    findings = exploiter.exploit(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} command injection vulnerabilities found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No command injection found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def lfi(url, output):
+    """Test for Local File Inclusion vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing LFI vulnerabilities: {url}", fg="cyan", bold=True))
+    
+    exploiter = LFIExploiter()
+    findings = exploiter.exploit(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} LFI vulnerabilities found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No LFI found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def ssrf(url, output):
+    """Test for SSRF vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing SSRF vulnerabilities: {url}", fg="cyan", bold=True))
+    
+    exploiter = SSRFExploiter()
+    findings = exploiter.exploit(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} SSRF vulnerabilities found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No SSRF found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def auth(url, output):
+    """Test for authentication bypass vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing authentication bypass: {url}", fg="cyan", bold=True))
+    
+    tester = AuthBypassTester()
+    findings = tester.test(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} auth bypass issues found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No auth bypass found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@exploit.command()
+@click.argument('url')
+@click.option('--output', '-o', type=click.Path(), help='Save results to file')
+def upload(url, output):
+    """Test for file upload vulnerabilities."""
+    print_banner()
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[+] Testing file upload vulnerabilities: {url}", fg="cyan", bold=True))
+    
+    exploiter = FileUploadExploiter()
+    findings = exploiter.exploit(url)
+    
+    if findings:
+        click.echo(click.style(f"\n[!] {len(findings)} file upload vulnerabilities found!", fg="red", bold=True))
+        print_findings(findings, verbose=True)
+    else:
+        click.echo(click.style("\n[-] No file upload vulnerabilities found", fg="green"))
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(findings, f, indent=2, default=str)
+
+
+@main.command()
+@click.argument('url')
+@click.option('--method', '-m', type=click.Choice(['HTTP', 'SLOWLORIS']), default='HTTP', help='Attack method')
+@click.option('--intensity', '-i', type=click.Choice(['low', 'medium', 'high']), default='low', help='Attack intensity')
+@click.option('--duration', '-d', default=30, help='Duration in seconds (max 300)')
+@click.option('--confirm', is_flag=True, help='Confirm you have authorization')
+def dos(url, method, intensity, duration, confirm):
+    """DoS/DDoS simulation (AUTHORIZED USE ONLY)."""
+    print_banner()
+    
+    if not confirm:
+        click.echo(click.style("\n[!] WARNING: This tool is for authorized testing only!", fg="red", bold=True))
+        click.echo("    Use --confirm flag to acknowledge you have authorization.")
+        return
+    
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+    
+    click.echo(click.style(f"\n[!] DoS Simulation Mode", fg="red", bold=True))
+    click.echo(click.style(f"    Target: {url}", fg="yellow"))
+    click.echo(click.style(f"    Method: {method}", fg="yellow"))
+    click.echo(click.style(f"    Intensity: {intensity}", fg="yellow"))
+    click.echo(click.style(f"    Duration: {duration}s", fg="yellow"))
+    
+    if not click.confirm("\n    Continue with attack simulation?", default=False):
+        click.echo("Aborted.")
+        return
+    
+    attacker = DoSAttacker()
+    result = attacker.start_attack(url, method=method, intensity=intensity, duration=duration)
+    
+    click.echo(click.style(f"\n[+] Attack started: {result['status']}", fg="green"))
+    click.echo("    Press Ctrl+C to stop early")
+    
+    try:
+        import time
+        for i in range(int(duration)):
+            time.sleep(1)
+            click.echo(f"\r    Elapsed: {i+1}s / {duration}s", nl=False)
+    except KeyboardInterrupt:
+        attacker.stop_attack()
+        click.echo(click.style("\n\n[+] Attack stopped by user", fg="yellow"))
 
 
 if __name__ == "__main__":
