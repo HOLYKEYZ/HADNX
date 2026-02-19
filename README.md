@@ -140,3 +140,5 @@ Hadnx operates on a **Purple Team** philosophy:
 ## License
 
 GNU GENERAL PUBLIC LICENSE Version 3
+
+NOTE: THIS IS JUST A PROJECT
