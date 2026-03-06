@@ -316,8 +316,7 @@ hadnx/
 │   │   ├── scanner/          # Scan logic, Models, Views
 │   │   │   ├── hadnx_ai/     # Agentic Pentesting Pipeline
 │   │   │   ├── services/     # Individual tool & analyzer services
-│   │   │   ├── tasks.py      # Background task orchestration
-│   │   │   └── hadnx_ai/     # Agentic Pentesting Pipeline
+│   │   │   └── tasks.py      # Background task orchestration
 │   │   └── reports/          # Compliance mapping & PDF generation
 │   └── requirements.txt
 │
