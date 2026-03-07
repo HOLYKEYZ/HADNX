@@ -66,8 +66,6 @@ Hadnx provides a powerful CLI for running security scans directly from the termi
 # From project root
 pip install -e .
 
-# Or install dependencies manually
-pip install click requests cryptography beautifulsoup4 dnspython
 ```
 
 ### Quick CLI Commands
