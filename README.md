@@ -282,7 +282,7 @@ npm install
 npm run dev
 ```
 
-Visit [http://localhost:5176](http://localhost:5176) to access the application.
+Visit [http://localhost:3000](http://localhost:3000) to access the application.
 
 ## API Endpoints (Core)
 
@@ -313,8 +313,7 @@ hadnx/
 │   ├── apps/
 │   │   ├── scanner/          # Scan logic, Models, Views
 │   │   │   ├── hadnx_ai/     # Agentic Pentesting Pipeline
-│   │   │   ├── services/     # Individual tool & analyzer services
-│   │   │   ├── tasks.py      # Background task orchestration
+│   │   │   └── services/     # Individual tool & analyzer services
 │   │   │   └── hadnx_ai/     # Agentic Pentesting Pipeline
 │   │   └── reports/          # Compliance mapping & PDF generation
 │   └── requirements.txt
