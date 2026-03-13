@@ -46,9 +46,9 @@ dev = [
 hadnx = "hadnx.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/hadnx/hadnx"
-Documentation = "https://github.com/hadnx/hadnx#readme"
-Repository = "https://github.com/hadnx/hadnx"
+Homepage = "https://github.com/HOLYKEYZ/HADNX"
+Documentation = "https://github.com/HOLYKEYZ/HADNX#readme"
+Repository = "https://github.com/HOLYKEYZ/HADNX"
 
 [tool.setuptools.packages.find]
 where = ["."]
