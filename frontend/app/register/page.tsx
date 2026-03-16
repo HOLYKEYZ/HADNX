@@ -36,7 +36,6 @@ export default function RegisterPage() {
     try {
       const data = await api.register(formData);
 
-      localStorage.setItem("user", JSON.stringify(data.user));
       router.push("/dashboard");
     } catch (err: any) {
       console.error("Registration error:", err);
