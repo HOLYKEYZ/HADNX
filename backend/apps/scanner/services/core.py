@@ -83,7 +83,21 @@ def fetch_url(url: str, timeout: int = 15):
         result['headers'] = dict(response.headers)
         result['cookies'] = response.cookies.get_dict()
         result['html'] = response.text
-        result['set_cookies'] = [c.name for c in response.cookies]
+
+      result['set_cookies'] = []
+      for c in response.cookies:
+        cookie_attributes = {
+          'name': c.name,
+          'value': c.value,
+          'domain': c.domain,
+          'path': c.path,
+          'expires': c.expires,
+          'secure': c.secure,
+          'httponly': 'httponly' in c.rest,
+          'samesite': c.rest.get('samesite', None)
+        }
+        result['set_cookies'].append(cookie_attributes)
+      
     except UnboundLocalError:
         # Should be covered by early returns, but safety check
         if not result['error']:
