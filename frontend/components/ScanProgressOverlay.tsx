@@ -7,42 +7,42 @@ import { cn } from "@/lib/utils";
 
 interface ScanProgressOverlayProps {
   isVisible: boolean;
+  scanId: string;
 }
 
 const SCAN_STEPS = [
-  { icon: Search, label: "Resolving target DNS...", duration: 4000 },
-  { icon: Server, label: "Fingerprinting server & WAF...", duration: 5500 },
-  { icon: Lock, label: "Analyzing SSL/TLS Configuration...", duration: 5000 },
-  { icon: Shield, label: "Checking HTTP Security Headers...", duration: 4500 },
-  { icon: Search, label: "Scanning for Sensitive Cookies...", duration: 4000 },
-  { icon: Brain, label: "Running AI Heuristic Analysis...", duration: 8000 }, // AI takes longer
-  { icon: CheckCircle2, label: "Finalizing Security Score...", duration: 3000 },
+  { icon: Search, label: "Resolving target DNS...", backendStatus: "DNS_RESOLUTION" },
+  { icon: Server, label: "Fingerprinting server & WAF...", backendStatus: "WAF_FINGERPRINTING" },
+  { icon: Lock, label: "Analyzing SSL/TLS Configuration...", backendStatus: "SSL_ANALYSIS" },
+  { icon: Shield, label: "Checking HTTP Security Headers...", backendStatus: "HEADERS_CHECK" },
+  { icon: Search, label: "Scanning for Sensitive Cookies...", backendStatus: "COOKIES_SCAN" },
+  { icon: Brain, label: "Running AI Heuristic Analysis...", backendStatus: "AI_ANALYSIS" },
+  { icon: CheckCircle2, label: "Finalizing Security Score...", backendStatus: "COMPLETED" },
 ];
 
 export function ScanProgressOverlay({ isVisible }: ScanProgressOverlayProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  useEffect(() => {
-    if (!isVisible) {
-      setCurrentStepIndex(0);
-      return;
+useEffect(() => {
+  if (!isVisible) {
+    setCurrentStepIndex(0);
+    return;
+  }
+
+  const pollScanStatus = async () => {
+    const response = await fetch(`/api/scans/${scanId}/status/`);
+    const data = await response.json();
+    const status = data.status;
+    const stepIndex = SCAN_STEPS.findIndex((step) => step.backendStatus === status);
+    if (stepIndex !== -1) {
+      setCurrentStepIndex(stepIndex);
     }
+  };
 
-    let timeoutId: NodeJS.Timeout;
+  const intervalId = setInterval(pollScanStatus, 2000);
 
-    const runStep = (index: number) => {
-      if (index >= SCAN_STEPS.length) return;
-
-      timeoutId = setTimeout(() => {
-        setCurrentStepIndex((prev) => prev + 1);
-        runStep(index + 1);
-      }, SCAN_STEPS[index].duration);
-    };
-
-    runStep(0);
-
-    return () => clearTimeout(timeoutId);
-  }, [isVisible]);
+  return () => clearInterval(intervalId);
+}, [isVisible, scanId]);
 
   if (!isVisible) return null;
 
